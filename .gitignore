@@ -16,7 +16,7 @@ instance/
 .webassets-cache
 
 # Database
-database.db
+# database.db
 *.sqlite3
 
 # IDE
