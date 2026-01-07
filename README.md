@@ -1,26 +1,26 @@
 # 🌐 Ứng dụng Web Python với Flask
 
-Ứng dụng web được xây dựng bằng Python và Flask với hệ thống đăng nhập và quản trị dựa trên file Excel.
+Ứng dụng web được xây dựng bằng Python và Flask, sử dụng cơ sở dữ liệu **SQLite** để lưu trữ và quản lý chi tiêu cá nhân.
 
 ## ✨ Tính năng
 
-- ✅ **Hệ thống đăng nhập** - Xác thực người dùng từ file Excel (xlsx)
-- ✅ **Trang quản trị** - Dashboard với thông tin người dùng
+- ✅ **Hệ thống đăng nhập** - Xác thực người dùng an toàn từ Database
+- ✅ **Trang quản trị** - Dashboard với thông tin người dùng và quản lý dữ liệu
 - ✅ **Quản lý người dùng** - Hiển thị danh sách người dùng (cho admin)
-- ✅ **Session management** - Quản lý phiên đăng nhập an toàn
-- ✅ **Giao diện hiện đại** - Responsive design với gradient và animations
-- ✅ **API endpoints** - Các API để tương tác
+- ✅ **Quản lý chi tiêu** - Thêm, sửa, xóa các khoản thu/chi
+- ✅ **Báo cáo** - Biểu đồ thống kê trực quan
+- ✅ **Data Management** - Import/Export dữ liệu qua file Excel
 
 ## 🚀 Cài đặt và Chạy (Local / Windows)
 
-### 1. Chuẩn bị file dữ liệu
+### 1. Clone Code
 
-Đảm bảo bạn có file `data/export_all.xlsx` với các cột:
-- `user` - Tên đăng nhập
-- `password` - Mật khẩu
-- `Name` - Họ và tên
-- `role` - Vai trò (admin/user)
-- `active` - Trạng thái hoạt động (True/False)
+```bash
+git clone https://github.com/hung95-sys/quan-ly-chi-tieu.git
+cd quan-ly-chi-tieu
+```
+
+*Lưu ý: Dự án đã bao gồm file `database.db` chứa dữ liệu sẵn có.*
 
 ### 2. Cài đặt dependencies
 
@@ -37,8 +37,6 @@ python app.py
 ### 4. Mở trình duyệt
 
 Truy cập: http://localhost:5000
-
-Bạn sẽ được chuyển đến trang đăng nhập. Sử dụng tài khoản từ file Excel để đăng nhập.
 
 ---
 
@@ -64,7 +62,7 @@ sudo apt install python3-pip python3-venv nginx git -y
 # Di chuyển đến thư mục web (ví dụ /var/www)
 cd /var/www
 
-# Clone source code (thay URL bằng repo của bạn)
+# Clone source code
 sudo git clone https://github.com/hung95-sys/quan-ly-chi-tieu.git
 cd quan-ly-chi-tieu
 
@@ -79,7 +77,7 @@ pip install -r requirements.txt
 pip install gunicorn  # Cài thêm gunicorn cho production
 ```
 
-### 3. Cấu hình Systemd Service (để app tự chạy)
+### 3. Cấu hình Systemd Service
 
 Tạo file service để quản lý ứng dụng:
 
@@ -87,7 +85,7 @@ Tạo file service để quản lý ứng dụng:
 sudo nano /etc/systemd/system/quanlychitieu.service
 ```
 
-Dán nội dung sau vào (sửa đường dẫn nếu cần):
+Dán nội dung sau vào:
 
 ```ini
 [Unit]
@@ -148,13 +146,17 @@ sudo nginx -t  # Kiểm tra lỗi cú pháp
 sudo systemctl restart nginx
 ```
 
-### 5. Cấp quyền ghi file (Quan trọng)
+### 5. Cấp quyền ghi file Database (QUAN TRỌNG)
 
-Vì ứng dụng sử dụng SQLite (`database.db`) và Excel, bạn cần cấp quyền ghi cho thư mục chứa database:
+Vì ứng dụng sử dụng SQLite (`database.db`), bạn cần cấp quyền ghi tuyệt đối cho file này và thư mục chứa nó để ứng dụng có thể lưu dữ liệu:
 
 ```bash
+# Cấp quyền cho file database
+sudo chmod 664 /var/www/quan-ly-chi-tieu/database.db
+
+# Cấp quyền cho thư mục chứa database
+sudo chmod 775 /var/www/quan-ly-chi-tieu
 sudo chown -R www-data:www-data /var/www/quan-ly-chi-tieu
-sudo chmod -R 775 /var/www/quan-ly-chi-tieu
 ```
 
 ---
@@ -166,64 +168,25 @@ Hung/
 ├── app.py                 # File chính của ứng dụng Flask
 ├── requirements.txt       # Danh sách các package cần thiết
 ├── README.md             # File hướng dẫn
+├── database.db           # Cơ sở dữ liệu SQLite (Chứa dữ liệu chính)
 ├── data/
-│   └── export_all.xlsx   # File Excel chứa thông tin người dùng
-├── templates/
-│   ├── index.html        # Template HTML chính (cũ)
-│   ├── login.html        # Trang đăng nhập
-│   ├── admin.html        # Trang quản trị
-│   └── ...
-└── static/
-    ├── style.css         # File CSS chung
-    └── ...
+│   └── export_all.xlsx   # File Excel (Dùng để backup/import)
+├── templates/             # Giao diện HTML
+└── static/                # CSS, JS, Images
 ```
-
-## 🔌 Routes và API Endpoints
-
-### Routes chính:
-- `GET /` - Chuyển hướng đến trang login hoặc admin
-- `GET /login` - Trang đăng nhập
-- `POST /login` - Xử lý đăng nhập
-- `GET /logout` - Đăng xuất
-- `GET /admin` - Trang quản trị (yêu cầu đăng nhập)
-
-### API Endpoints:
-- `GET /api/time` - Lấy thời gian hiện tại
-- `POST /api/echo` - Nhận và phản hồi dữ liệu JSON
 
 ## 🛠️ Công nghệ sử dụng
 
 - **Backend**: Python 3.x, Flask
+- **Database**: SQLite
 - **Authentication**: Flask Session
-- **Data**: pandas, openpyxl (đọc file Excel), SQLite
+- **Data Processing**: pandas, openpyxl
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Styling**: Modern CSS với gradients và animations
 
-## 🔐 Bảo mật
+## ⚠️ Lưu ý về Database
 
-- **Session Secret Key**: Đổi `app.secret_key` trong `app.py` trước khi deploy production
-- **Password**: Hiện tại mật khẩu được lưu dạng plain text trong Excel (nên hash trong production)
-- **File Excel**: Đảm bảo file Excel được bảo vệ và không công khai
-
-## 📝 Ghi chú
-
-- Ứng dụng chạy ở chế độ debug mode (phù hợp cho development)
-- Port mặc định: 5000
-- Host: 0.0.0.0 (có thể truy cập từ mạng local)
-- File Excel được đọc mỗi lần đăng nhập (có thể cache để tối ưu)
-
-## 🎨 Tùy chỉnh
-
-Bạn có thể tùy chỉnh:
-- Màu sắc trong các file CSS (`static/*.css`)
-- Layout trong các template (`templates/*.html`)
-- Logic authentication trong `app.py`
-- Cấu trúc dữ liệu trong file Excel
-
-## ⚠️ Lưu ý
-
-- Đảm bảo file `data/export_all.xlsx` có đúng cấu trúc cột
-- Người dùng có `active = False` sẽ không thể đăng nhập
-- Chỉ user có `role = 'admin'` mới xem được danh sách tất cả người dùng
+- File `database.db` chứa toàn bộ dữ liệu người dùng và giao dịch.
+- Khi deploy, hãy đảm bảo file này được bảo mật.
+- Nên thường xuyên backup dữ liệu bằng tính năng **Export Excel** trong trang quản trị.
 
 Chúc bạn code vui vẻ! 🎉
