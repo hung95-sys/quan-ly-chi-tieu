@@ -42,7 +42,7 @@ Truy cập: http://localhost:5000
 
 ## 🐧 Hướng dẫn Cài đặt trên Ubuntu (Production)
 
-Cách nhanh nhất để cài đặt là sử dụng script tự động (đã bao gồm cài đặt Python, Nginx, Systemd và phân quyền):
+Cách nhanh nhất để cài đặt là sử dụng script tự động (đã bao gồm cài đặt Python, Systemd và phân quyền):
 
 ```bash
 sudo bash <(curl -s https://raw.githubusercontent.com/hung95-sys/quan-ly-chi-tieu/main/install.sh)
