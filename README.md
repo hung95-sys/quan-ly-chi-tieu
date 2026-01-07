@@ -80,4 +80,28 @@ Hung/
 - Khi deploy, hãy đảm bảo file này được bảo mật.
 - Nên thường xuyên backup dữ liệu bằng tính năng **Export Excel** trong trang quản trị.
 
+## 🛠️ Các lệnh Quản lý Service
+
+Sau khi cài đặt, bạn có thể dùng các lệnh sau để quản lý ứng dụng:
+
+- **Kiểm tra trạng thái:**
+  ```bash
+  sudo systemctl status quanlychitieu
+  ```
+
+- **Khởi động lại (khi cập nhật code):**
+  ```bash
+  sudo systemctl restart quanlychitieu
+  ```
+
+- **Dừng ứng dụng:**
+  ```bash
+  sudo systemctl stop quanlychitieu
+  ```
+
+- **Xem log lỗi (nếu web không chạy):**
+  ```bash
+  sudo journalctl -u quanlychitieu -n 50 -f
+  ```
+
 Chúc bạn code vui vẻ! 🎉
