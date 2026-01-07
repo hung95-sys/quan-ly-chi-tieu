@@ -104,4 +104,24 @@ Sau khi cài đặt, bạn có thể dùng các lệnh sau để quản lý ứn
   sudo journalctl -u quanlychitieu -n 50 -f
   ```
 
+## 🔄 Hướng dẫn Cập nhật Code
+
+Khi bạn có chỉnh sửa mới ở dưới máy local và muốn cập nhật lên server:
+
+**Bước 1: Tại máy tính cá nhân (Local)**
+Đẩy code mới lên GitHub:
+```bash
+git add .
+git commit -m "Mô tả những thay đổi"
+git push
+```
+
+**Bước 2: Tại Server (Ubuntu)**
+Chạy lệnh sau để kéo code về và khởi động lại web:
+```bash
+cd /var/www/quan-ly-chi-tieu
+sudo git pull
+sudo systemctl restart quanlychitieu
+```
+
 Chúc bạn code vui vẻ! 🎉
