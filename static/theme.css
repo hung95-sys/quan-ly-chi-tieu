@@ -1,0 +1,76 @@
+/* Theme Variables - Light Mode (Default) */
+:root {
+    /* Colors */
+    --bg-primary: #e8eaed;
+    --bg-secondary: #f1f3f5;
+    --bg-tertiary: #d4d8dc;
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --text-tertiary: #95a5a6;
+    --border-color: #d1d5db;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-hover: rgba(0, 0, 0, 0.12);
+
+    /* Gradient */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+
+    /* Cards */
+    --card-bg: #f0f2f5;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+
+    /* Inputs */
+    --input-bg: #f8f9fa;
+    --input-border: #d1d5db;
+    --input-focus-border: #667eea;
+
+    /* Buttons */
+    --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --btn-secondary-bg: #d4d8dc;
+    --btn-text: #2d3436;
+
+    /* Table */
+    --table-header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --table-row-hover: #e8eaed;
+
+    /* Modal */
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --modal-bg: #f8f9fa;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #404040;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #808080;
+    --border-color: #404040;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+
+    --card-bg: #2d2d2d;
+    --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.5);
+
+    --input-bg: #2d2d2d;
+    --input-border: #404040;
+    --input-focus-border: #667eea;
+
+    --btn-secondary-bg: #404040;
+    --btn-text: #e0e0e0;
+
+    --table-row-hover: #353535;
+
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --modal-bg: #2d2d2d;
+}
+
+/* Theme Toggle Button - Moved to dropdown menu */
+
+/* Smooth transition for theme changes */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang quản trị - Web Python</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+</head>
+
+<body>
+    <div class="admin-container" data-is-admin="{% if current_user.role == 'admin' %}true{% else %}false{% endif %}">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>Trang quản trị</h1>
+                <div class="header-right">
+                    <a href="{{ url_for('main.dashboard') }}" class="admin-home-btn" title="Về trang chủ">
+                        <span class="admin-home-icon">🏠</span>
+                    </a>
+                    <div class="user-profile-dropdown">
+                        <button class="user-profile-btn" onclick="toggleUserDropdown()">
+                            <div class="user-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}
+                            </div>
+                            <span class="user-name-text">{{ current_user.name }}</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="user-dropdown-menu" id="userDropdown">
+                            <a href="#" onclick="showChangePasswordModal(); return false;" class="dropdown-item">
+                                <span class="dropdown-icon">🔑</span>
+                                <span>Đổi mật khẩu</span>
+                            </a>
+                            {% if current_user.role == 'admin' %}
+                            <a href="#" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Quản trị</span>
+                            </a>
+                            {% endif %}
+                            <a href="#" onclick="toggleTheme(); return false;" class="dropdown-item">
+                                <span class="dropdown-icon" id="theme-icon">🌙</span>
+                                <span id="theme-text">Chế độ tối</span>
+                            </a>
+                            <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Đăng xuất</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Main content -->
+        <main class="admin-main">
+            <!-- Dashboard cards -->
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-icon">👤</div>
+                    <div class="card-content">
+                        <h3>Thông tin tài khoản</h3>
+                        <p class="card-value">{{ current_user.username }}</p>
+                        <p class="card-label">Tên đăng nhập</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-content">
+                        <h3>Họ và tên</h3>
+                        <p class="card-value">{{ current_user.name }}</p>
+                        <p class="card-label">Tên hiển thị</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-icon">🔑</div>
+                    <div class="card-content">
+                        <h3>Quyền hạn</h3>
+                        <p class="card-value">{{ current_user.role }}</p>
+                        <p class="card-label">Vai trò</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-icon">👥</div>
+                    <div class="card-content">
+                        <h3>Tổng người dùng</h3>
+                        <p class="card-value">{{ all_users|length }}</p>
+                        <p class="card-label">Số lượng tài khoản</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users table (chỉ hiển thị nếu là admin) -->
+            {% if current_user.role == 'admin' %}
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2>📊 Quản lý người dùng</h2>
+                    <button onclick="showAddUserForm()" class="btn-add">➕ Thêm tài khoản</button>
+                </div>
+
+                <!-- Form thêm/sửa user (ẩn mặc định) -->
+                <div id="user-form-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="form-title">Thêm tài khoản mới</h3>
+                            <button onclick="closeUserForm()" class="btn-close">&times;</button>
+                        </div>
+                        <form id="user-form" onsubmit="saveUser(event)">
+                            <input type="hidden" id="edit-username" name="edit-username" value="">
+                            <div class="form-group">
+                                <label for="username">Tên đăng nhập *</label>
+                                <input type="text" id="username" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Mật khẩu *</label>
+                                <input type="password" id="password" name="password" required>
+                                <small id="password-hint" style="display: none;">Để trống nếu không muốn đổi mật
+                                    khẩu</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Họ và tên</label>
+                                <input type="text" id="name" name="name">
+                            </div>
+                            <div class="form-group">
+                                <label for="role">Vai trò</label>
+                                <select id="role" name="role">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="active" name="active" checked>
+                                    Kích hoạt tài khoản
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" onclick="closeUserForm()" class="btn-cancel">Hủy</button>
+                                <button type="submit" class="btn-save">Lưu</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên đăng nhập</th>
+                                <th>Họ và tên</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            {% if all_users %}
+                            {% for user in all_users %}
+                            <tr data-username="{{ user.username }}">
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ user.username }}</strong></td>
+                                <td>{{ user.name }}</td>
+                                <td><span class="badge badge-{{ user.role }}">{{ user.role }}</span></td>
+                                <td>
+                                    {% if user.active %}
+                                    <span class="status-badge status-active">🟢 Hoạt động</span>
+                                    {% else %}
+                                    <span class="status-badge status-inactive">🔴 Không hoạt động</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button onclick="editUser('{{ user.username }}')" class="btn-action btn-edit">✏️
+                                        Sửa</button>
+                                    <button onclick="deleteUser('{{ user.username }}')" class="btn-action btn-delete" {%
+                                        if user.username==current_user.username %}disabled
+                                        title="Không thể xóa chính mình" {% endif %}>🗑️ Xóa</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Không có dữ liệu</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Data Management -->
+            {% if current_user.role == 'admin' %}
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2>💾 Quản lý dữ liệu</h2>
+                </div>
+                <div class="data-actions" style="padding: 20px;">
+                    <button onclick="exportExcel()" class="btn-add" style="background: #10b981;">📥 Export
+                        Excel</button>
+                    <button onclick="document.getElementById('import-file').click()" class="btn-add"
+                        style="background: #3b82f6; margin-left: 10px;">📤 Import Excel</button>
+                    <input type="file" id="import-file" accept=".xlsx, .xls" style="display: none;"
+                        onchange="importExcel(this)">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Fund Groups Management (replaces old fund_links) -->
+            {% if current_user.role == 'admin' %}
+            <div class="admin-section">
+                <div class="section-header">
+                    <h2>👥 Quản lý nhóm quỹ</h2>
+                    <button onclick="showAddGroupModal()" class="btn-add">➕ Tạo nhóm mới</button>
+                </div>
+
+                <!-- Modal tạo/sửa nhóm quỹ -->
+                <div id="fund-group-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="fund-group-modal-title">Tạo nhóm quỹ mới</h3>
+                            <button onclick="closeGroupModal()" class="btn-close">&times;</button>
+                        </div>
+                        <form id="fund-group-form" onsubmit="saveGroup(event)">
+                            <input type="hidden" id="group-id" value="">
+                            <div class="form-group">
+                                <label for="group-name">Tên nhóm *</label>
+                                <input type="text" id="group-name" name="name" required placeholder="VD: Quỹ Gia Đình">
+                            </div>
+                            <div class="form-group">
+                                <label>Thành viên</label>
+                                <div id="group-members-checkboxes" class="checkbox-group">
+                                    {% for user in all_users %}
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="members" value="{{ user.id }}"
+                                            data-name="{{ user.name }}">
+                                        <span>{{ user.name }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" onclick="closeGroupModal()" class="btn-cancel">Hủy</button>
+                                <button type="submit" class="btn-save">Lưu</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Danh sách nhóm quỹ -->
+                <div id="fund-groups-list" class="groups-list">
+                    <p class="text-center">Đang tải...</p>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <!-- Change Password Modal -->
+        <div id="changePasswordModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔑 Đổi mật khẩu</h3>
+                    <button onclick="closeChangePasswordModal()" class="btn-close">&times;</button>
+                </div>
+                <form id="change-password-form" onsubmit="changePassword(event)">
+                    <div class="form-group">
+                        <label for="current-password">Mật khẩu hiện tại *</label>
+                        <input type="password" id="current-password" name="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">Mật khẩu mới *</label>
+                        <input type="password" id="new-password" name="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Xác nhận mật khẩu mới *</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeChangePasswordModal()" class="btn-cancel">Hủy</button>
+                        <button type="submit" class="btn-save">Đổi mật khẩu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quản lý người dùng
+        function showAddUserForm() {
+            document.getElementById('form-title').textContent = 'Thêm tài khoản mới';
+            document.getElementById('user-form').reset();
+            document.getElementById('edit-username').value = '';
+            document.getElementById('password').required = true;
+            document.getElementById('password-hint').style.display = 'none';
+            document.getElementById('active').checked = true;
+            document.getElementById('user-form-modal').style.display = 'flex';
+        }
+
+        function closeUserForm() {
+            document.getElementById('user-form-modal').style.display = 'none';
+            document.getElementById('user-form').reset();
+        }
+
+        function editUser(username) {
+            // Lấy thông tin user từ API
+            fetch('/api/users')
+                .then(response => response.json())
+                .then(data => {
+                    const user = data.users.find(u => u.username === username);
+                    if (user) {
+                        document.getElementById('form-title').textContent = 'Sửa tài khoản';
+                        document.getElementById('edit-username').value = user.username;
+                        document.getElementById('username').value = user.username;
+                        document.getElementById('password').value = '';
+                        document.getElementById('password').required = false;
+                        document.getElementById('password-hint').style.display = 'block';
+                        document.getElementById('name').value = user.name;
+                        document.getElementById('role').value = user.role;
+                        document.getElementById('active').checked = user.active;
+                        document.getElementById('user-form-modal').style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi khi tải thông tin người dùng: ' + error);
+                });
+        }
+
+        function saveUser(event) {
+            event.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                name: document.getElementById('name').value.trim(),
+                role: document.getElementById('role').value,
+                active: document.getElementById('active').checked
+            };
+
+            const editUsername = document.getElementById('edit-username').value;
+            const isEdit = editUsername !== '';
+
+            // Nếu là sửa và không nhập mật khẩu mới, không gửi password
+            if (isEdit && !formData.password) {
+                delete formData.password;
+            }
+
+            const url = isEdit ? `/api/users/${editUsername}` : '/api/users';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi: ' + error);
+                });
+        }
+
+        function deleteUser(username) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}"?`)) {
+                return;
+            }
+
+            fetch(`/api/users/${username}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi: ' + error);
+                });
+        }
+
+        // User dropdown
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Đóng dropdown khi click bên ngoài
+        window.onclick = function (event) {
+            const modal = document.getElementById('user-form-modal');
+            if (event.target == modal) {
+                closeUserForm();
+            }
+
+            const passwordModal = document.getElementById('changePasswordModal');
+            if (event.target == passwordModal) {
+                closeChangePasswordModal();
+            }
+
+            const groupModal = document.getElementById('fund-group-modal');
+            if (event.target == groupModal) {
+                closeGroupModal();
+            }
+
+            if (!event.target.matches('.user-profile-btn') && !event.target.closest('.user-profile-dropdown')) {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Change password
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'flex';
+            document.getElementById('change-password-form').reset();
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) dropdown.classList.remove('show');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+
+            const formData = {
+                current_password: document.getElementById('current-password').value.trim(),
+                new_password: document.getElementById('new-password').value.trim(),
+                confirm_password: document.getElementById('confirm-password').value.trim()
+            };
+
+            fetch('/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        closeChangePasswordModal();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi: ' + error);
+                });
+        }
+
+        // ============================================
+        // Quản lý nhóm quỹ (Fund Groups)
+        // ============================================
+
+        function showAddGroupModal() {
+            document.getElementById('group-id').value = '';
+            document.getElementById('group-name').value = '';
+            document.getElementById('fund-group-modal-title').textContent = 'Tạo nhóm quỹ mới';
+            document.querySelectorAll('#group-members-checkboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            document.getElementById('fund-group-modal').style.display = 'flex';
+        }
+
+        function closeGroupModal() {
+            document.getElementById('fund-group-modal').style.display = 'none';
+        }
+
+        function loadFundGroups() {
+            fetch('/api/fund_groups/all')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('fund-groups-list');
+                    if (data.groups && data.groups.length > 0) {
+                        container.innerHTML = data.groups.map(group => `
+                            <div class="group-card">
+                                <div class="group-header">
+                                    <h3 class="group-name">${group.name}</h3>
+                                    <div class="group-actions">
+                                        <button onclick="editGroup(${group.id}, '${group.name}')" class="btn-action btn-edit">✏️</button>
+                                        <button onclick="deleteGroup(${group.id})" class="btn-action btn-delete">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="group-members">
+                                    <span class="members-label">Thành viên:</span>
+                                    ${group.members.map(m => `<span class="member-tag">${m.name}</span>`).join('')}
+                                </div>
+                                <div class="group-meta">
+                                    <small>Tạo bởi: ${group.created_by} | ${group.created_at}</small>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p class="text-center no-data">Chưa có nhóm quỹ nào. Hãy tạo nhóm mới!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải nhóm quỹ:', error);
+                    document.getElementById('fund-groups-list').innerHTML = '<p class="text-center text-error">Lỗi khi tải dữ liệu</p>';
+                });
+        }
+
+        function editGroup(groupId, groupName) {
+            document.getElementById('group-id').value = groupId;
+            document.getElementById('group-name').value = groupName;
+            document.getElementById('fund-group-modal-title').textContent = 'Chỉnh sửa nhóm quỹ';
+
+            fetch(`/api/fund_groups/${groupId}/members`)
+                .then(response => response.json())
+                .then(data => {
+                    const memberIds = data.members.map(m => m.id);
+                    document.querySelectorAll('#group-members-checkboxes input[type="checkbox"]').forEach(cb => {
+                        cb.checked = memberIds.includes(parseInt(cb.value));
+                    });
+                    document.getElementById('fund-group-modal').style.display = 'flex';
+                });
+        }
+
+        function saveGroup(event) {
+            event.preventDefault();
+
+            const groupId = document.getElementById('group-id').value;
+            const name = document.getElementById('group-name').value.trim();
+            const memberCheckboxes = document.querySelectorAll('#group-members-checkboxes input[type="checkbox"]:checked');
+            const memberIds = Array.from(memberCheckboxes).map(cb => parseInt(cb.value));
+
+            if (!name) {
+                alert('Vui lòng nhập tên nhóm');
+                return;
+            }
+
+            if (memberIds.length === 0) {
+                alert('Vui lòng chọn ít nhất 1 thành viên');
+                return;
+            }
+
+            if (groupId) {
+                fetch(`/api/fund_groups/${groupId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateGroupMembers(groupId, memberIds);
+                        } else {
+                            alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                        }
+                    });
+            } else {
+                fetch('/api/fund_groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, member_ids: memberIds })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Tạo nhóm quỹ thành công!');
+                            closeGroupModal();
+                            loadFundGroups();
+                        } else {
+                            alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                        }
+                    })
+                    .catch(error => alert('Lỗi: ' + error));
+            }
+        }
+
+        async function updateGroupMembers(groupId, newMemberIds) {
+            try {
+                const response = await fetch(`/api/fund_groups/${groupId}/members`);
+                const data = await response.json();
+                const currentMemberIds = data.members.map(m => m.id);
+
+                for (const id of currentMemberIds) {
+                    if (!newMemberIds.includes(id)) {
+                        await fetch(`/api/fund_groups/${groupId}/members/${id}`, { method: 'DELETE' });
+                    }
+                }
+
+                for (const id of newMemberIds) {
+                    if (!currentMemberIds.includes(id)) {
+                        await fetch(`/api/fund_groups/${groupId}/members`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: id })
+                        });
+                    }
+                }
+
+                alert('Cập nhật nhóm quỹ thành công!');
+                closeGroupModal();
+                loadFundGroups();
+            } catch (error) {
+                alert('Lỗi cập nhật thành viên: ' + error);
+            }
+        }
+
+        function deleteGroup(groupId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa nhóm quỹ này?')) return;
+
+            fetch(`/api/fund_groups/${groupId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        loadFundGroups();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => alert('Lỗi: ' + error));
+        }
+
+        function exportExcel() {
+            window.location.href = '/api/export/excel';
+        }
+
+        function importExcel(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            if (!confirm(`Bạn có chắc chắn muốn import file "${file.name}"?`)) {
+                input.value = '';
+                return;
+            }
+
+            const btn = input.previousElementSibling;
+            const originalText = btn.innerText;
+            btn.innerText = '⏳ Đang xử lý...';
+            btn.disabled = true;
+
+            fetch('/api/import/excel', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let msg = data.message;
+                        if (data.errors && data.errors.length > 0) {
+                            msg += '\n\nCảnh báo lỗi:\n' + data.errors.slice(0, 5).join('\n') + (data.errors.length > 5 ? '\n...' : '');
+                        }
+                        alert(msg);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => alert('Lỗi: ' + error))
+                .finally(() => {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    input.value = '';
+                });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('fund-groups-list')) {
+                loadFundGroups();
+            }
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Python - Flask App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Ứng dụng Web Python</h1>
+            <p class="subtitle">Được xây dựng với Flask</p>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>Thông tin thời gian</h2>
+                <div id="time-display" class="time-display">Đang tải...</div>
+                <button onclick="updateTime()" class="btn btn-primary">Cập nhật thời gian</button>
+            </section>
+
+            <section class="card">
+                <h2>Gửi dữ liệu</h2>
+                <form id="echo-form" class="form">
+                    <input type="text" id="message-input" placeholder="Nhập tin nhắn của bạn..." required>
+                    <button type="submit" class="btn btn-secondary">Gửi</button>
+                </form>
+                <div id="response" class="response"></div>
+            </section>
+
+            <section class="card">
+                <h2>Giới thiệu</h2>
+                <p>Đây là một ứng dụng web đơn giản được xây dựng bằng Python và Flask.</p>
+                <ul>
+                    <li>✅ Backend: Python Flask</li>
+                    <li>✅ Frontend: HTML, CSS, JavaScript</li>
+                    <li>✅ API endpoints để tương tác</li>
+                    <li>✅ Giao diện hiện đại và responsive</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ using Python & Flask</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+

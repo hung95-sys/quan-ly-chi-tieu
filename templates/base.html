@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Trang Web Cá Nhân{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    {% block extra_css %}{% endblock %}
+    <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/nav.js') }}" defer></script>
+    {% block extra_js %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <div id="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Common Modals or Scripts can go here -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

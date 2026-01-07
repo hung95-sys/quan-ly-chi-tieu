@@ -1,0 +1,1937 @@
+/* -------- Chi tiêu Layout (mobile-first) -------- */
+/* Trang chi tiêu LUÔN ở light mode, không phụ thuộc theme */
+.chi-tieu-page,
+[data-theme="dark"] .chi-tieu-page {
+    background: #fff !important;
+    color: #1f2937 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    padding-bottom: 80px;
+}
+
+/* Override các phần tử cụ thể để đảm bảo hiển thị đúng trên nền trắng */
+[data-theme="dark"] .chi-tieu-page .chi-header,
+[data-theme="dark"] .chi-tieu-page .chi-tab,
+[data-theme="dark"] .chi-tieu-page .chi-input,
+[data-theme="dark"] .chi-tieu-page .chi-cat,
+[data-theme="dark"] .chi-tieu-page .chi-bottom,
+[data-theme="dark"] .chi-tieu-page .chi-bottom-item,
+[data-theme="dark"] .chi-tieu-page .chi-field label,
+[data-theme="dark"] .chi-tieu-page .chi-lich-title,
+[data-theme="dark"] .chi-tieu-page .chi-lich-nav-btn,
+[data-theme="dark"] .chi-tieu-page .chi-lich-month-year,
+[data-theme="dark"] .chi-tieu-page .category-item,
+[data-theme="dark"] .chi-tieu-page .category-item-info {
+    background-color: transparent;
+    color: inherit;
+}
+
+.chi-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 5;
+    border-bottom: 1px solid #f2f2f2;
+    padding: 0.5rem 1rem 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chi-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0.25rem 0;
+    gap: 0.5rem;
+}
+
+.chi-tab {
+    padding: 0.75rem 0.5rem;
+    border: none;
+    background: #fff;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chi-tab.active {
+    color: #f97316;
+    border-bottom-color: #f97316;
+}
+
+.chi-tab.disabled {
+    color: #cbd5e1;
+}
+
+.chi-user {
+    color: #374151;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+/* Ensure username is visible on chi_tieu page */
+.chi-tieu-page .user-profile-btn,
+[data-theme="dark"] .chi-tieu-page .user-profile-btn {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+    border: none !important;
+}
+
+.chi-tieu-page .user-name-text,
+[data-theme="dark"] .chi-tieu-page .user-name-text {
+    color: #111827 !important;
+    font-weight: 600;
+}
+
+.chi-tieu-page .dropdown-arrow,
+[data-theme="dark"] .chi-tieu-page .dropdown-arrow {
+    color: #6b7280 !important;
+}
+
+.chi-user-name {
+    font-weight: 600;
+    font-size: 1em;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.chi-home-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    text-decoration: none;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    color: white;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    font-size: 1.4em;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.chi-home-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.chi-home-link:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.chi-container {
+    padding: 1rem 1rem 3.5rem;
+}
+
+.chi-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 0.75rem;
+}
+
+.chi-field label {
+    font-weight: 700;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.chi-input {
+    width: 100%;
+    border: 1.5px solid #e5e7eb;
+    background: #fff7ed;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    color: #111827;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.chi-input:focus {
+    outline: none;
+    border-color: #f97316;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15), 0 0 0 1px rgba(249, 115, 22, 0.3);
+    transform: scale(1.01);
+}
+
+.chi-input.with-icon {
+    position: relative;
+    padding-right: 2.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.chi-input.with-icon input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 1rem;
+    padding: 0;
+    margin: 0;
+    color: #111827;
+    outline: none;
+}
+
+.chi-input.with-icon input::placeholder {
+    color: #9ca3af;
+    opacity: 0.6;
+}
+
+.chi-input.with-icon.focused {
+    border-color: #f97316;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15), 0 0 0 1px rgba(249, 115, 22, 0.3);
+    transform: scale(1.01);
+}
+
+.chi-input .chi-icon {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: #f97316;
+    font-weight: 700;
+}
+
+.chi-month-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.chi-month-row input[type="text"] {
+    flex: 1;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    background: #fff7ed;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #111827;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chi-month-row input[type="text"]:hover {
+    background: #ffedd5;
+    border-color: #fbbf24;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+}
+
+.chi-month-row .btn {
+    padding: 0.7rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.chi-month-row .btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chi-month-row .btn:active {
+    transform: translateY(0);
+}
+
+.chi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    padding: 0.25rem 0;
+}
+
+@media (max-width: 540px) {
+    .chi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.chi-cat {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.85rem;
+    padding: 0.75rem 0.4rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #374151;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 75px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chi-cat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(249, 115, 22, 0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chi-cat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-color: #fbbf24;
+}
+
+.chi-cat:hover::before {
+    opacity: 1;
+}
+
+.chi-cat .icon {
+    font-size: 1.3rem;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.75rem;
+}
+
+.chi-cat.active {
+    border: 2px solid #f97316;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    color: #f97316;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25), 0 4px 8px rgba(249, 115, 22, 0.15);
+    transform: translateY(-2px);
+}
+
+.chi-cat.active::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%);
+}
+
+.chi-submit {
+    margin-top: 1.25rem;
+    width: 100%;
+    padding: 0.95rem;
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #f97316 100%);
+    background-size: 200% 200%;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3), 0 4px 8px rgba(249, 115, 22, 0.2);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.chi-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.chi-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(249, 115, 22, 0.4), 0 6px 12px rgba(249, 115, 22, 0.3);
+    background-position: 100% 0;
+}
+
+.chi-submit:hover::before {
+    left: 100%;
+}
+
+.chi-submit:active {
+    transform: translateY(-1px);
+}
+
+.chi-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Bottom Navigation */
+.chi-bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #fafafa;
+    border-top: 1px solid #e5e7eb;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0.55rem 0.5rem 0.65rem;
+    z-index: 10;
+}
+
+.chi-bottom-item {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #9ca3af;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.chi-bottom-item .icon {
+    font-size: 1.15rem;
+}
+
+.chi-bottom-item.active {
+    color: #f97316;
+}
+
+/* Dark mode support */
+/* Trang chi tiêu LUÔN ở light mode - override tất cả dark mode */
+[data-theme="dark"] .chi-tieu-page {
+    background: #fff !important;
+    color: #1f2937 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page h2 {
+    color: #1f2937 !important;
+    border-bottom-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-header {
+    background: #fff !important;
+    border-bottom-color: #f2f2f2 !important;
+}
+
+[data-theme="dark"] .chi-tab {
+    background: #fff !important;
+    color: #9ca3af !important;
+}
+
+[data-theme="dark"] .chi-tab.active {
+    color: #f97316 !important;
+}
+
+[data-theme="dark"] .chi-input {
+    background: #fff7ed !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-input.with-icon input {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-input.with-icon input::placeholder {
+    color: #9ca3af !important;
+    opacity: 0.6;
+}
+
+[data-theme="dark"] .chi-input.with-icon.focused {
+    border-color: #f97316 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15), 0 0 0 1px rgba(249, 115, 22, 0.3) !important;
+}
+
+[data-theme="dark"] .chi-month-row input[type="text"] {
+    background: #fff7ed !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-month-row .btn {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-cat {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+    border-color: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+[data-theme="dark"] .chi-cat:hover {
+    border-color: #fbbf24 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+}
+
+[data-theme="dark"] .chi-cat.active {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+    border-color: #f97316 !important;
+    color: #f97316 !important;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3), 0 4px 8px rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="dark"] .chi-bottom {
+    background: #fafafa !important;
+    border-top-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-bottom-item {
+    color: #9ca3af !important;
+}
+
+[data-theme="dark"] .chi-bottom-item.active {
+    color: #f97316 !important;
+}
+
+/* Dark mode cho label - override để luôn light mode */
+[data-theme="dark"] .chi-tieu-page .chi-field label {
+    color: #4b5563 !important;
+}
+
+/* Dark mode cho submit button */
+[data-theme="dark"] .chi-submit {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #f97316 100%);
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4), 0 4px 8px rgba(249, 115, 22, 0.3);
+}
+
+[data-theme="dark"] .chi-submit:hover {
+    box-shadow: 0 12px 28px rgba(249, 115, 22, 0.5), 0 6px 12px rgba(249, 115, 22, 0.4);
+}
+
+/* Dark mode cho placeholder */
+[data-theme="dark"] .chi-cat.placeholder {
+    color: #94a3b8;
+}
+
+/* Dark mode cho lịch section - override để luôn light mode */
+[data-theme="dark"] .chi-tieu-page .chi-lich-title {
+    background: #fff !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-nav-btn {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-nav-btn:hover {
+    background: #f9fafb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-month-year {
+    background: #fff7ed !important;
+    border-color: #fde68a !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-month-year:hover {
+    background: #fed7aa !important;
+}
+
+/* Lịch luôn ở chế độ sáng ở cả dark và light mode */
+[data-theme="dark"] .chi-lich-calendar {
+    background: #ffffff;
+}
+
+[data-theme="dark"] .chi-lich-weekdays {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+}
+
+[data-theme="dark"] .chi-lich-weekday {
+    background: #f3f4f6;
+    color: #111827;
+    border-color: #e5e7eb;
+}
+
+[data-theme="dark"] .chi-lich-days {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+
+[data-theme="dark"] .chi-lich-day {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+
+[data-theme="dark"] .chi-lich-day:hover:not(.empty) {
+    background: #f3f4f6;
+}
+
+[data-theme="dark"] .chi-lich-day-number {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* Dark mode - Today: nền vàng nhạt, chữ cam đậm, border cam */
+[data-theme="dark"] .chi-lich-day.today {
+    background: #fef3c7;
+    border-color: #f97316;
+    border-width: 2px;
+}
+
+[data-theme="dark"] .chi-lich-day.today .chi-lich-day-number {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+/* Dark mode - Selected: nền cam nhạt, chữ cam đậm */
+[data-theme="dark"] .chi-lich-day.selected {
+    background: #fed7aa;
+    border-color: #f97316;
+}
+
+[data-theme="dark"] .chi-lich-day.selected .chi-lich-day-number {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+/* Dark mode - Amount colors (thu/chi) - trên nền trắng */
+[data-theme="dark"] .chi-lich-day-amount.thu {
+    color: #059669;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .chi-lich-day-amount.chi {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* Dark mode - Amount trong today/selected */
+[data-theme="dark"] .chi-lich-day.today .chi-lich-day-amount.thu {
+    color: #047857;
+}
+
+[data-theme="dark"] .chi-lich-day.today .chi-lich-day-amount.chi {
+    color: #b91c1c;
+}
+
+[data-theme="dark"] .chi-lich-day.selected .chi-lich-day-amount.thu {
+    color: #047857;
+}
+
+[data-theme="dark"] .chi-lich-day.selected .chi-lich-day-amount.chi {
+    color: #b91c1c;
+}
+
+/* Dark mode - Các ngày có giao dịch (background được set trong JS là #fff7ed) */
+[data-theme="dark"] .chi-lich-day[style*="background: rgb(255, 247, 237)"],
+[data-theme="dark"] .chi-lich-day[style*="background:#fff7ed"],
+[data-theme="dark"] .chi-lich-day[style*="background: rgb(255,247,237)"] {
+    background: #fff7ed !important;
+}
+
+[data-theme="dark"] .chi-lich-day[style*="background: rgb(255, 247, 237)"] .chi-lich-day-number,
+[data-theme="dark"] .chi-lich-day[style*="background:#fff7ed"] .chi-lich-day-number,
+[data-theme="dark"] .chi-lich-day[style*="background: rgb(255,247,237)"] .chi-lich-day-number {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* Category item styles */
+.category-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+
+.category-item-info {
+    color: #111827;
+}
+
+/* Dark mode cho category-item - override để luôn light mode */
+[data-theme="dark"] .chi-tieu-page .category-item {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .category-item-info {
+    color: #111827 !important;
+}
+
+/* Dark mode cho báo cáo section - override để luôn light mode */
+[data-theme="dark"] .chi-tieu-page .report-row {
+    background: rgba(255, 247, 237, 0.5) !important;
+    border-color: rgba(229, 231, 235, 0.8) !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .report-year {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .report-bars .bar {
+    color: #111827 !important;
+}
+
+/* Calendar Modal */
+.calendar-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.calendar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.calendar-container {
+    position: relative;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    width: 90%;
+    max-width: 320px;
+    z-index: 1001;
+    margin: auto;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.calendar-month-year {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.calendar-nav-btn {
+    background: #f3f4f6;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav-btn:hover {
+    background: #e5e7eb;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.15rem;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #6b7280;
+    padding: 0.35rem 0.25rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.15rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.4rem;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    min-height: 36px;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+.calendar-day:not(.empty):hover {
+    background: #f3f4f6;
+}
+
+.calendar-day.today {
+    background: #fff7ed;
+    color: #f97316;
+    font-weight: 700;
+}
+
+.calendar-day.selected {
+    background: #f97316;
+    color: #fff;
+    font-weight: 700;
+}
+
+/* Dark mode for calendar */
+[data-theme="dark"] .calendar-container {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .calendar-month-year {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .calendar-nav-btn {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .calendar-nav-btn:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .calendar-weekday {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .calendar-day {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .calendar-day:not(.empty):hover {
+    background: #334155;
+}
+
+[data-theme="dark"] .calendar-day.today {
+    background: #78350f;
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .calendar-day.selected {
+    background: #f97316;
+    color: #fff;
+}
+
+/* -------- Lịch Section trong Chi tiêu -------- */
+.chi-lich-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    padding: 0.75rem 1rem 0.5rem;
+    background: #fff;
+}
+
+.chi-lich-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.chi-lich-nav-btn {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 0.75rem;
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #111827;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chi-lich-nav-btn:hover {
+    background: #f9fafb;
+}
+
+.chi-lich-month-year {
+    flex: 1;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.05rem;
+    background: #fff7ed;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.85rem;
+    border: 1px solid #fde68a;
+    cursor: pointer;
+    color: #111827;
+    transition: all 0.2s ease;
+}
+
+.chi-lich-month-year:hover {
+    background: #fed7aa;
+}
+
+.chi-lich-calendar-icon {
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0.4rem;
+}
+
+.chi-lich-calendar {
+    padding: 0.5rem 0;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chi-lich-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    border-radius: 0.5rem 0.5rem 0 0;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chi-lich-weekday {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 0.35rem 0;
+    background: #f3f4f6;
+    border-right: 1px solid #d1d5db;
+    margin: 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.chi-lich-weekday:last-child {
+    border-right: none;
+}
+
+.chi-lich-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #d1d5db;
+    border-top: 2px solid #d1d5db;
+    border-radius: 0 0 0.5rem 0.5rem;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chi-lich-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0.25rem 0.1rem;
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
+    background: #fff;
+    border-right: 1px solid #d1d5db;
+    border-bottom: 1px solid #d1d5db;
+    box-shadow: none;
+    margin: 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    flex: 1;
+}
+
+.chi-lich-day:nth-child(7n) {
+    border-right: none;
+}
+
+.chi-lich-day.empty {
+    cursor: default;
+    opacity: 0.3;
+}
+
+.chi-lich-day:hover:not(.empty) {
+    background: #f9fafb;
+}
+
+.chi-lich-day-number {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.08rem;
+    line-height: 1.2;
+}
+
+.chi-lich-day-amount {
+    font-size: 0.6rem;
+    font-weight: 600;
+    margin-top: 0.05rem;
+    line-height: 1.1;
+}
+
+.chi-lich-day-amount.thu {
+    color: #059669;
+}
+
+.chi-lich-day-amount.chi {
+    color: #ef4444;
+}
+
+.chi-lich-day.today {
+    background: #fef3c7;
+    border-color: #f97316;
+}
+
+.chi-lich-day.today .chi-lich-day-number {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+.chi-lich-day.selected {
+    background: #fff7ed !important;
+    border: 2px solid #f97316;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+}
+
+.chi-lich-day.selected .chi-lich-day-number {
+    color: #f97316;
+    font-weight: 700;
+}
+
+.chi-lich-summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+.chi-lich-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.chi-lich-summary-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.chi-lich-summary-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.chi-lich-summary-value.thu {
+    color: #16a34a;
+}
+
+.chi-lich-summary-value.chi {
+    color: #dc2626;
+}
+
+.chi-lich-summary-value.tong {
+    color: #111827;
+}
+
+.chi-lich-summary-value.tong.negative {
+    color: #dc2626;
+}
+
+.chi-lich-transactions {
+    padding: 0 1rem 1rem;
+}
+
+.chi-lich-transaction-group {
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.chi-lich-transaction-group.highlighted {
+    background: #fff7ed;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #f97316;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+
+.chi-lich-transaction-date {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chi-lich-day-total {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.chi-lich-day-total.positive {
+    color: #16a34a;
+}
+
+.chi-lich-day-total.negative {
+    color: #dc2626;
+}
+
+.chi-lich-transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #fff;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #f2f2f2;
+}
+
+.chi-lich-transaction-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+}
+
+.chi-lich-transaction-details {
+    flex: 1;
+}
+
+.chi-lich-transaction-category {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chi-lich-fund-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+}
+
+.chi-lich-transaction-note {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.chi-lich-transaction-amount {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.chi-lich-transaction-amount.thu {
+    color: #16a34a;
+}
+
+.chi-lich-transaction-amount.chi {
+    color: #dc2626;
+}
+
+/* Dark mode for lịch section */
+[data-theme="dark"] .chi-lich-nav-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .chi-lich-nav-btn:hover {
+    background: #334155;
+}
+
+/* Override tất cả lịch styles để luôn light mode trong trang chi tiêu */
+[data-theme="dark"] .chi-tieu-page .chi-lich-month-year {
+    background: #fff7ed !important;
+    border-color: #fde68a !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-calendar {
+    background: #ffffff !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-day:hover:not(.empty) {
+    background: #f3f4f6 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-day-number {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-day.today {
+    background: #fef3c7 !important;
+    border-color: #f97316 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-summary {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-item {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-category {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-date {
+    color: #6b7280 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-day-total.positive {
+    color: #059669 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-day-total.negative {
+    color: #dc2626 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-note {
+    color: #6b7280 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-amount.thu {
+    color: #059669 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-transaction-amount.chi {
+    color: #dc2626 !important;
+}
+
+/* Calendar Popup for Month/Year Selection */
+.chi-lich-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.chi-lich-popup {
+    background: #fff;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 400px;
+    padding: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.chi-lich-popup-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.chi-lich-popup-calendar {
+    width: 100%;
+}
+
+.chi-lich-popup-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    margin-bottom: 0.5rem;
+}
+
+.chi-lich-popup-weekday {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    padding: 0.5rem 0;
+}
+
+.chi-lich-popup-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.chi-lich-popup-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.chi-lich-popup-day:nth-child(7n) {
+    border-right: none;
+}
+
+.chi-lich-popup-day.empty {
+    cursor: default;
+    opacity: 0.3;
+    background: #f9fafb;
+}
+
+.chi-lich-popup-day:hover:not(.empty) {
+    background: #f3f4f6;
+}
+
+.chi-lich-popup-day.selected {
+    background: #f97316 !important;
+    color: #fff;
+    font-weight: 700;
+}
+
+.chi-lich-popup-day.today {
+    background: #fef3c7;
+}
+
+.chi-lich-popup-day.today.selected {
+    background: #f97316 !important;
+}
+
+/* Dark mode for popup - override để luôn light mode trong trang chi tiêu */
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup {
+    background: #fff !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-weekday {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-day {
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-day.empty {
+    background: #f9fafb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-day:hover:not(.empty) {
+    background: #f3f4f6 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-day.selected {
+    background: #f97316 !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-lich-popup-day.today {
+    background: #fef3c7 !important;
+}
+
+/* Mobile adjustments for calendar */
+@media (max-width: 540px) {
+    .chi-lich-day-amount {
+        font-size: 0.5rem;
+    }
+}
+
+/* Báo cáo */
+.report-card {
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.05), transparent 35%), linear-gradient(145deg, #0f172a 0%, #1e293b 60%, #0b1220 100%);
+    border-radius: 1.25rem;
+    padding: 1.35rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
+    position: relative;
+    overflow: hidden;
+    min-height: 260px;
+    max-height: 360px;
+    display: flex;
+    flex-direction: column;
+}
+
+.report-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 80% 0%, rgba(59, 130, 246, 0.25), transparent 55%);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.report-card canvas {
+    max-height: 230px;
+    position: relative;
+    z-index: 1;
+}
+
+#bao-cao-section .chi-field label {
+    color: #000000;
+    font-weight: 800;
+    font-size: 1.05rem;
+    position: relative;
+    z-index: 1;
+}
+
+[data-theme="dark"] #bao-cao-section .chi-field label {
+    color: #ffffff;
+}
+
+.report-years {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.report-row {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 1rem;
+    padding: 0.85rem 0.9rem;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.report-year {
+    font-weight: 800;
+    color: #e2e8f0;
+    font-size: 1rem;
+}
+
+.report-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.report-bars .bar {
+    min-height: 28px;
+    border-radius: 0.65rem;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.report-bars .bar span {
+    margin-left: auto;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+[data-theme="dark"] .chi-tieu-page .report-bars .bar span {
+    color: #111827 !important;
+}
+
+.report-bars .bar.income {
+    background: rgba(74, 222, 128, 0.18);
+    border: 1px solid rgba(74, 222, 128, 0.45);
+    color: #22c55e;
+}
+
+.report-bars .bar.expense {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+}
+
+.report-bars .bar.fund {
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #3b82f6;
+}
+
+/* Icon Picker */
+.icon-picker-wrapper {
+    position: relative;
+}
+
+.icon-picker-grid {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.icon-picker-item {
+    width: 100%;
+    aspect-ratio: 1;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 0.55rem;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-picker-item:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    transform: scale(1.1);
+}
+
+.icon-picker-item.selected {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .icon-picker-grid {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+[data-theme="dark"] .icon-picker-item {
+    background: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .icon-picker-item:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+}
+
+[data-theme="dark"] .icon-picker-item.selected {
+    background: #1e40af;
+    border-color: #3b82f6;
+}
+
+/* Category Modal */
+.chi-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.chi-modal {
+    position: relative;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    z-index: 1001;
+    margin: auto;
+}
+
+.chi-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.chi-modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.chi-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.chi-modal-close:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.chi-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+}
+
+.chi-btn-cancel,
+.chi-btn-submit {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.chi-btn-cancel {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.chi-btn-cancel:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.chi-btn-submit {
+    background: #f97316;
+    color: #fff;
+}
+
+.chi-btn-submit:hover {
+    background: #ea580c;
+}
+
+/* Modal - override để luôn light mode trong trang chi tiêu */
+[data-theme="dark"] .chi-tieu-page .chi-modal {
+    background: #fff !important;
+    color: #1f2937 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-modal-header {
+    border-bottom-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-modal-header h3 {
+    color: #111827 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-modal-close {
+    color: #6b7280 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-modal-close:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+/* Buttons - override để luôn light mode trong trang chi tiêu */
+[data-theme="dark"] .chi-tieu-page .chi-btn-cancel {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-btn-cancel:hover {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+/* Button delete trong category list */
+.chi-btn-delete {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.chi-btn-cancel:not(.chi-btn-delete) {
+    border: 1px solid #e5e7eb;
+}
+
+/* Button delete trong category list - override để light mode */
+[data-theme="dark"] .chi-tieu-page .chi-btn-delete {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border-color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-btn-delete:hover {
+    background: #fecaca !important;
+    border-color: #f87171 !important;
+}
+
+/* Button edit trong category list - override để light mode */
+[data-theme="dark"] .chi-tieu-page .chi-btn-cancel:not(.chi-btn-delete) {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border-color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .chi-tieu-page .chi-btn-cancel:not(.chi-btn-delete):hover {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+/* ============ Swipe Actions for Transactions ============ */
+.swipe-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.chi-lich-transaction-item.swipeable {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    transition: transform 0.3s ease;
+    will-change: transform;
+    touch-action: pan-y;
+    margin-bottom: 0 !important;
+}
+
+/* Desktop Hover Effect */
+@media (hover: hover) {
+    .swipe-wrapper:hover .chi-lich-transaction-item.swipeable {
+        transform: translateX(-120px);
+    }
+}
+
+.swipe-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    background: transparent;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+@media (hover: hover) {
+    .swipe-wrapper:hover .swipe-actions {
+        opacity: 1;
+    }
+}
+
+.swipe-wrapper.swiped .swipe-actions {
+    opacity: 1;
+}
+
+.swipe-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.swipe-btn.edit-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.swipe-btn.edit-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.swipe-btn.delete-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.swipe-btn.delete-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+
+
+/* Edit Transaction Modal */
+.edit-transaction-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.edit-transaction-content {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.edit-transaction-content h3 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.edit-transaction-content .chi-field {
+    margin-bottom: 1rem;
+}
+
+.edit-transaction-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.edit-transaction-actions button {
+    flex: 1;
+    padding: 0.85rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-transaction-actions .cancel-btn {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+}
+
+.edit-transaction-actions .cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+.edit-transaction-actions .save-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.edit-transaction-actions .save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Trang Web Cá Nhân</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>Home</h1>
+                <div class="user-profile-dropdown">
+                    <button class="user-profile-btn" onclick="toggleUserDropdown()">
+                        <div class="user-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+                        <span class="user-name-text">{{ current_user.name }}</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="user-dropdown-menu" id="userDropdown">
+                        <a href="#" onclick="showChangePasswordModal(); return false;" class="dropdown-item">
+                            <span class="dropdown-icon">🔑</span>
+                            <span>Đổi mật khẩu</span>
+                        </a>
+                        {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('main.admin') }}" class="dropdown-item">
+                            <span class="dropdown-icon">⚙️</span>
+                            <span>Quản trị</span>
+                        </a>
+                        {% endif %}
+                        <a href="#" onclick="toggleTheme(); return false;" class="dropdown-item">
+                            <span class="dropdown-icon" id="theme-icon">🌙</span>
+                            <span id="theme-text">Chế độ tối</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🚪</span>
+                            <span>Đăng xuất</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="container">
+            <!-- Navigation Bar -->
+            <nav class="dashboard-nav">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Trang chủ</span>
+                </a>
+                <a href="{{ url_for('main.chi_tieu') }}" class="nav-item">
+                    <span class="nav-icon">🌿</span>
+                    <span class="nav-text">Chỉ tiêu</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Ghi chú</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">Lịch</span>
+                </a>
+            </nav>
+
+            <!-- Main content -->
+            <main class="admin-main">
+                <!-- Financial Summary Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card income animate-fade-in-up-1">
+                        <div class="stat-label">💵 Tổng Thu</div>
+                        <div class="stat-value" id="total-income">
+                            {{ "{:,.0f}".format(summary.total_income) if summary else "0" }}
+                        </div>
+                    </div>
+                    <div class="stat-card expense animate-fade-in-up-2">
+                        <div class="stat-label">💸 Tổng Chi</div>
+                        <div class="stat-value" id="total-expense">
+                            {{ "{:,.0f}".format(summary.total_expense) if summary else "0" }}
+                        </div>
+                    </div>
+                    <div class="stat-card balance animate-fade-in-up-3">
+                        <div class="stat-label">💰 Số Dư</div>
+                        <div class="stat-value" id="balance">
+                            {{ "{:,.0f}".format(summary.balance) if summary else "0" }}
+                        </div>
+                    </div>
+                    <div class="stat-card fund animate-fade-in-up-4">
+                        <div class="stat-label">📦 Tổng Quỹ</div>
+                        <div class="stat-value" id="total-fund">
+                            {{ "{:,.0f}".format(summary.total_fund) if summary and summary.total_fund else "0" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Funds Section -->
+                <div class="admin-section funds-section">
+                    <h2>
+                        <span class="section-icon">💰</span>
+                        Quỹ (tất cả loại)
+                    </h2>
+                    <div class="funds-content" id="funds-content">
+                        <p class="no-data">Đang tải...</p>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div id="changePasswordModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔑 Đổi mật khẩu</h3>
+                    <button onclick="closeChangePasswordModal()" class="btn-close">&times;</button>
+                </div>
+                <form id="change-password-form" onsubmit="changePassword(event)">
+                    <div class="form-group">
+                        <label for="current-password">Mật khẩu hiện tại *</label>
+                        <input type="password" id="current-password" name="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">Mật khẩu mới *</label>
+                        <input type="password" id="new-password" name="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Xác nhận mật khẩu mới *</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeChangePasswordModal()" class="btn-cancel">Hủy</button>
+                        <button type="submit" class="btn-save">Đổi mật khẩu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'flex';
+            document.getElementById('change-password-form').reset();
+            document.getElementById('userDropdown').classList.remove('show');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+            const formData = {
+                current_password: document.getElementById('current-password').value.trim(),
+                new_password: document.getElementById('new-password').value.trim(),
+                confirm_password: document.getElementById('confirm-password').value.trim()
+            };
+            fetch('/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        closeChangePasswordModal();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Có lỗi xảy ra'));
+                    }
+                })
+                .catch(error => alert('Lỗi: ' + error));
+        }
+
+        window.onclick = function (event) {
+            const passwordModal = document.getElementById('changePasswordModal');
+            if (event.target == passwordModal) {
+                closeChangePasswordModal();
+            }
+            if (!event.target.matches('.user-profile-btn') && !event.target.closest('.user-profile-dropdown')) {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+
+        async function loadFundSummary() {
+            const content = document.getElementById('funds-content');
+            try {
+                const res = await fetch('/api/fund_summary');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không tải được dữ liệu quỹ');
+
+                const purposes = data.purposes || [];
+                const linkedUsers = data.linked_users || [];
+
+                if (purposes.length === 0) {
+                    content.innerHTML = '<p class="no-data">Chưa có giao dịch quỹ nào</p>';
+                    return;
+                }
+
+                let html = '<div class="table-container"><table class="fund-table">';
+                html += '<thead><tr>';
+                html += '<th>MỤC ĐÍCH QUỸ</th>';
+                linkedUsers.forEach(user => { html += `<th>${user.toUpperCase()}</th>`; });
+                html += '<th>TỔNG</th>';
+                html += '</tr></thead><tbody>';
+
+                let totalByUser = {};
+                linkedUsers.forEach(user => { totalByUser[user] = 0; });
+                let grandTotal = 0;
+
+                purposes.forEach(purpose => {
+                    html += '<tr>';
+                    html += `<td>${purpose.icon || ''} ${purpose.purpose}</td>`;
+                    linkedUsers.forEach(user => {
+                        const amount = purpose.users[user] || 0;
+                        totalByUser[user] += amount;
+                        html += `<td>${amount.toLocaleString('vi-VN')}</td>`;
+                    });
+                    html += `<td>${purpose.total.toLocaleString('vi-VN')}</td>`;
+                    html += '</tr>';
+                    grandTotal += purpose.total;
+                });
+
+                html += '<tr>';
+                html += '<td><strong>TỔNG</strong></td>';
+                linkedUsers.forEach(user => { html += `<td><strong>${totalByUser[user].toLocaleString('vi-VN')}</strong></td>`; });
+                html += `<td><strong>${grandTotal.toLocaleString('vi-VN')}</strong></td>`;
+                html += '</tr>';
+
+                html += '</tbody></table></div>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Lỗi khi tải fund summary:', error);
+                content.innerHTML = `<p class="no-data" style="color: #ef4444;">Lỗi: ${error.message}</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadFundSummary();
+        });
+    </script>
+</body>
+
+</html>
