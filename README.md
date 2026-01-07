@@ -42,122 +42,13 @@ Truy cập: http://localhost:5000
 
 ## 🐧 Hướng dẫn Cài đặt trên Ubuntu (Production)
 
-Dưới đây là hướng dẫn chi tiết để deploy ứng dụng lên server Ubuntu sử dụng **Gunicorn** và **Nginx**.
-
-### 1. Cài đặt các gói cần thiết
-
-Đăng nhập vào VPS/Server Ubuntu và chạy các lệnh sau:
+Cách nhanh nhất để cài đặt là sử dụng script tự động (đã bao gồm cài đặt Python, Nginx, Systemd và phân quyền):
 
 ```bash
-# Cập nhật hệ thống
-sudo apt update && sudo apt upgrade -y
-
-# Cài đặt Python, pip, venv và Nginx
-sudo apt install python3-pip python3-venv nginx git -y
+sudo bash <(curl -s https://raw.githubusercontent.com/hung95-sys/quan-ly-chi-tieu/main/install.sh)
 ```
 
-### 2. Clone Code và Cài đặt môi trường
-
-```bash
-# Di chuyển đến thư mục web (ví dụ /var/www)
-cd /var/www
-
-# Clone source code
-sudo git clone https://github.com/hung95-sys/quan-ly-chi-tieu.git
-cd quan-ly-chi-tieu
-
-# Tạo virtual environment
-python3 -m venv venv
-
-# Kích hoạt venv
-source venv/bin/activate
-
-# Cài đặt dependencies
-pip install -r requirements.txt
-pip install gunicorn  # Cài thêm gunicorn cho production
-```
-
-### 3. Cấu hình Systemd Service
-
-Tạo file service để quản lý ứng dụng:
-
-```bash
-sudo nano /etc/systemd/system/quanlychitieu.service
-```
-
-Dán nội dung sau vào:
-
-```ini
-[Unit]
-Description=Gunicorn instance to serve Quan Ly Chi Tieu
-After=network.target
-
-[Service]
-User=www-data
-Group=www-data
-WorkingDirectory=/var/www/quan-ly-chi-tieu
-Environment="PATH=/var/www/quan-ly-chi-tieu/venv/bin"
-ExecStart=/var/www/quan-ly-chi-tieu/venv/bin/gunicorn --workers 3 --bind unix:quanlychitieu.sock -m 007 app:app
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Lưu file (`Ctrl+O`, `Enter`) và thoát (`Ctrl+X`).
-
-Khởi động service:
-
-```bash
-# Cấp quyền sở hữu thư mục cho user www-data
-sudo chown -R www-data:www-data /var/www/quan-ly-chi-tieu
-
-# Khởi động và enable service
-sudo systemctl start quanlychitieu
-sudo systemctl enable quanlychitieu
-```
-
-### 4. Cấu hình Nginx (Reverse Proxy)
-
-Tạo file cấu hình Nginx:
-
-```bash
-sudo nano /etc/nginx/sites-available/quanlychitieu
-```
-
-Dán nội dung sau (thay `your_domain_or_ip` bằng IP hoặc tên miền của bạn):
-
-```nginx
-server {
-    listen 80;
-    server_name your_domain_or_ip;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/var/www/quan-ly-chi-tieu/quanlychitieu.sock;
-    }
-}
-```
-
-Lưu và thoát. Sau đó kích hoạt cấu hình:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/quanlychitieu /etc/nginx/sites-enabled
-sudo nginx -t  # Kiểm tra lỗi cú pháp
-sudo systemctl restart nginx
-```
-
-### 5. Cấp quyền ghi file Database (QUAN TRỌNG)
-
-Vì ứng dụng sử dụng SQLite (`database.db`), bạn cần cấp quyền ghi tuyệt đối cho file này và thư mục chứa nó để ứng dụng có thể lưu dữ liệu:
-
-```bash
-# Cấp quyền cho file database
-sudo chmod 664 /var/www/quan-ly-chi-tieu/database.db
-
-# Cấp quyền cho thư mục chứa database
-sudo chmod 775 /var/www/quan-ly-chi-tieu
-sudo chown -R www-data:www-data /var/www/quan-ly-chi-tieu
-```
+Sau khi chạy xong, website sẽ hoạt động ngay lập tức!
 
 ---
 
