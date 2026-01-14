@@ -28,7 +28,7 @@ def get_categories():
         # So we filter by subtype='normal'
         
         rows = query_db(
-            'SELECT name, icon FROM categories WHERE type = ? AND subtype = ? ORDER BY id',
+            "SELECT name, icon FROM categories WHERE type = ? AND subtype = ? AND name NOT IN ('Thu quỹ', 'Chi quỹ') ORDER BY id",
             (db_type, 'normal')
         )
         
@@ -135,11 +135,8 @@ def get_categories_list(category_type):
             for idx, row in enumerate(rows):
                 val = f"{row['icon']} {row['name']}" if row['icon'] else row['name']
                 categories.append({
-                    'row': idx, # Fake row ID, or use real ID? Frontend uses row for update/delete.
-                    # We should probably use real ID, but original code used row index.
-                    # If we use ID, we need to update frontend or handle it here.
-                    # Let's return ID as 'id' and 'row' for compatibility if needed.
-                    'id': row['name'], # Use name as ID for grouping?
+                    'row': row['name'], # Use name as ID for fund categories
+                    'id': row['name'], 
                     'value': val,
                     'column': 'Thu quỹ' # Just a placeholder
                 })
@@ -149,7 +146,7 @@ def get_categories_list(category_type):
                 db_type = 'Thu'
             
             rows = query_db(
-                'SELECT id, name, icon FROM categories WHERE type = ? AND subtype = ? ORDER BY id',
+                "SELECT id, name, icon FROM categories WHERE type = ? AND subtype = ? AND name NOT IN ('Thu quỹ', 'Chi quỹ') ORDER BY id",
                 (db_type, 'normal')
             )
             

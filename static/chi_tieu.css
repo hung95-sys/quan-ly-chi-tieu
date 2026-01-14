@@ -183,6 +183,9 @@
     margin: 0;
     color: #111827;
     outline: none;
+    box-shadow: none; /* Remove any shadow */
+    appearance: none; /* Remove native appearance */
+    -webkit-appearance: none;
 }
 
 .chi-input.with-icon input::placeholder {

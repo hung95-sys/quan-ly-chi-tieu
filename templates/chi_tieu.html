@@ -234,8 +234,15 @@
             <div class="chi-field" style="margin-top: 2rem;">
                 <label id="category-chart-label">Phân bổ chi tiêu theo danh mục tháng hiện tại</label>
                 <div class="report-card">
-                    <div style="height: 350px; position: relative; display: flex; justify-content: center;">
-                        <canvas id="report-chart-category"></canvas>
+                    <div
+                        style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2rem;">
+                        <div style="height: 300px; width: 300px; position: relative;">
+                            <canvas id="report-chart-category"></canvas>
+                        </div>
+                        <div id="custom-legend"
+                            style="background: rgba(255, 255, 255, 0.95); padding: 1.5rem; border-radius: 16px; color: #1f2937; min-width: 250px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <!-- Legend items will be injected here -->
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1063,7 +1063,40 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Open edit transaction modal
-    function openEditTransactionModal(trans) {
+    async function openEditTransactionModal(trans) {
+        // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
+        let formattedDate = '';
+        if (trans.ngay) {
+            const parts = trans.ngay.split('/');
+            if (parts.length === 3) {
+                formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+
+        // Fetch categories for the dropdown
+        let categories = [];
+        try {
+            const type = trans.loai === 'thu' ? 'Thu' : 'Chi';
+            const res = await fetch(`/api/categories?type=${type}`);
+            const data = await res.json();
+            if (data.categories) {
+                categories = data.categories;
+            }
+        } catch (err) {
+            console.error('Error fetching categories:', err);
+            // Fallback: just use the current category if fetch fails
+            categories = [trans.danh_muc];
+        }
+
+        // Build options
+        const options = categories.map(cat => {
+            const isSelected = cat === trans.danh_muc ? 'selected' : '';
+            return `<option value="${cat}" ${isSelected}>${cat}</option>`;
+        }).join('');
+
+        // Format initial amount
+        const formattedAmount = trans.so_tien ? trans.so_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+
         // Tạo modal
         const modal = document.createElement('div');
         modal.className = 'edit-transaction-modal';
@@ -1072,7 +1105,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h3>✏️ Sửa giao dịch</h3>
                         <div class="chi-field">
                             <label>Ngày</label>
-                            <input type="text" class="chi-input" id="edit-trans-ngay" value="${trans.ngay}" readonly>
+                            <input type="date" class="chi-input" id="edit-trans-ngay" value="${formattedDate}" 
+                                   style="text-align: left; appearance: none; -webkit-appearance: none; width: 100%; display: block; box-sizing: border-box; min-height: 45px;">
                         </div>
                         <div class="chi-field">
                             <label>Loại</label>
@@ -1083,11 +1117,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="chi-field">
                             <label>Danh mục</label>
-                            <input type="text" class="chi-input" id="edit-trans-danh-muc" value="${trans.danh_muc}">
+                            <select class="chi-input" id="edit-trans-danh-muc">
+                                ${options}
+                            </select>
                         </div>
                         <div class="chi-field">
                             <label>Số tiền</label>
-                            <input type="number" class="chi-input" id="edit-trans-so-tien" value="${trans.so_tien}">
+                            <input type="text" class="chi-input" id="edit-trans-so-tien" value="${formattedAmount}">
                         </div>
                         <div class="chi-field">
                             <label>Ghi chú</label>
@@ -1106,6 +1142,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.body.appendChild(modal);
 
+        // Add format listener for amount input
+        const amountInput = modal.querySelector('#edit-trans-so-tien');
+        amountInput.addEventListener('input', function() {
+            // Remove non-digits
+            const raw = this.value.replace(/\D/g, '');
+            if (!raw) {
+                this.value = '';
+                return;
+            }
+            // Format with dots
+            this.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        });
+
+        // Handle category type change (Thu/Chi) to reload categories
+        const loaiSelect = modal.querySelector('#edit-trans-loai');
+        const danhMucSelect = modal.querySelector('#edit-trans-danh-muc');
+        
+        loaiSelect.addEventListener('change', async () => {
+            const newType = loaiSelect.value === 'thu' ? 'Thu' : 'Chi';
+            try {
+                const res = await fetch(`/api/categories?type=${newType}`);
+                const data = await res.json();
+                if (data.categories) {
+                    danhMucSelect.innerHTML = data.categories.map(cat => 
+                        `<option value="${cat}">${cat}</option>`
+                    ).join('');
+                }
+            } catch (err) {
+                console.error('Error reloading categories:', err);
+            }
+        });
+
         // Xử lý nút Hủy
         modal.querySelector('.cancel-btn').addEventListener('click', () => {
             modal.remove();
@@ -1120,11 +1188,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Xử lý nút Lưu
         modal.querySelector('.save-btn').addEventListener('click', async () => {
+            // Convert YYYY-MM-DD back to DD/MM/YYYY
+            const dateVal = document.getElementById('edit-trans-ngay').value;
+            let ngayFormatted = '';
+            if (dateVal) {
+                const [y, m, d] = dateVal.split('-');
+                ngayFormatted = `${d}/${m}/${y}`;
+            } else {
+                ngayFormatted = trans.ngay;
+            }
+
+            // Parse amount (remove dots)
+            const soTienRaw = document.getElementById('edit-trans-so-tien').value.replace(/\./g, '');
+            const soTien = parseFloat(soTienRaw);
+
             const updatedTrans = {
-                ngay: document.getElementById('edit-trans-ngay').value,
+                ngay: ngayFormatted,
                 loai: document.getElementById('edit-trans-loai').value,
                 danh_muc: document.getElementById('edit-trans-danh-muc').value,
-                so_tien: parseFloat(document.getElementById('edit-trans-so-tien').value),
+                so_tien: isNaN(soTien) ? 0 : soTien,
                 ghi_chu: document.getElementById('edit-trans-ghi-chu').value,
                 quy: document.getElementById('edit-trans-quy').value
             };
@@ -1548,6 +1630,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 '#f43f5e', '#64748b'
             ];
 
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('vi-VN').format(amount);
+            };
+
             const labels = categories.map(c => c.name);
             const amounts = categories.map(c => c.amount);
 
@@ -1569,12 +1655,33 @@ document.addEventListener('DOMContentLoaded', function () {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
+                            display: false,
                             position: 'right',
                             labels: {
-                                color: '#e2e8f0',
+                                color: '#1f2937',
                                 usePointStyle: true,
+                                pointStyle: 'circle',
                                 padding: 20,
-                                font: { size: 12 }
+                                font: { size: 13, family: "'Inter', sans-serif" },
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+                                            const value = data.datasets[0].data[i];
+                                            return {
+                                                text: `${label}: ${formatCurrency(value)}`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
                             }
                         },
                         tooltip: {
@@ -1596,6 +1703,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
+            // Generate custom legend
+            const legendContainer = document.getElementById('custom-legend');
+            if (legendContainer) {
+                legendContainer.innerHTML = labels.map((label, i) => {
+                    const color = backgroundColors[i % backgroundColors.length];
+                    const amount = amounts[i];
+                    return `
+                        <div style="display: flex; align-items: center; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                            <span style="display: inline-block; width: 12px; height: 12px; background-color: ${color}; border-radius: 50%; margin-right: 12px; flex-shrink: 0;"></span>
+                            <span style="flex-grow: 1; margin-right: 12px; font-weight: 500;">${label}</span>
+                            <span style="font-weight: 600; color: #111827;">${formatCurrency(amount)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
 
         } catch (err) {
             console.error('Error loading category report:', err);
@@ -1993,7 +2116,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: JSON.stringify({
                         type: type,
-                        row: parseInt(row),
+                        row: (type === 'Quy') ? row : parseInt(row),
                         old_value: oldValue,
                         name: newName,
                         icon: editIconInput ? editIconInput.value.trim() : editSelectedIcon,

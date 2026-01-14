@@ -39,6 +39,12 @@ def export_excel():
             df_trans = pd.DataFrame([dict(row) for row in rows_trans])
             df_trans.to_excel(writer, index=False, sheet_name='Transactions')
             
+            # 1.5 Categories (New)
+            sql_cats = 'SELECT name, type, subtype, icon FROM categories'
+            rows_cats = query_db(sql_cats)
+            df_cats = pd.DataFrame([dict(row) for row in rows_cats])
+            df_cats.to_excel(writer, index=False, sheet_name='Categories')
+            
             # 2. Users
             sql_users = 'SELECT username, name, role, active FROM users'
             rows_users = query_db(sql_users)
@@ -150,10 +156,39 @@ def import_excel():
                     errors.append(f"Lỗi User {row.get('username')}: {e}")
             success_msg.append(f"Đã thêm {count_users} users mới.")
         
-        # Reload cache to include existing users
-        all_users = query_db('SELECT id, username FROM users')
         for u in all_users:
             users_cache[u['username']] = u['id']
+
+        # --- 1.5 Restore Categories (New) ---
+        categories_cache = {} # name -> id
+        if 'Categories' in xls.sheet_names:
+            df_cats = pd.read_excel(xls, 'Categories')
+            count_cats = 0
+            for _, row in df_cats.iterrows():
+                try:
+                    name = str(row['name']).strip()
+                    cat_type = str(row['type']).strip()
+                    subtype = str(row['subtype']).strip() if 'subtype' in row and pd.notna(row['subtype']) else 'default'
+                    icon = str(row['icon']).strip() if 'icon' in row and pd.notna(row['icon']) else '📝'
+                    
+                    existing = query_db('SELECT id FROM categories WHERE name = ?', (name,), one=True)
+                    if existing:
+                        categories_cache[name] = existing['id']
+                        # Optional: Update icon/type if needed? For now, skip to preserve existing.
+                    else:
+                        query_db('INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)',
+                                (name, cat_type, subtype, icon))
+                        new_cat = query_db('SELECT id FROM categories WHERE name = ?', (name,), one=True)
+                        categories_cache[name] = new_cat['id']
+                        count_cats += 1
+                except Exception as e:
+                    errors.append(f"Lỗi Category {row.get('name')}: {e}")
+            success_msg.append(f"Đã đồng bộ {count_cats} danh mục mới.")
+        
+        # Reload cache to include all categories (including pre-existing ones)
+        all_cats = query_db('SELECT id, name FROM categories')
+        for c in all_cats:
+            categories_cache[c['name']] = c['id']
 
         # --- 2. Restore Fund Groups ---
         groups_cache = {} # name -> id
@@ -209,11 +244,11 @@ def import_excel():
         if sheet_trans:
             df = pd.read_excel(xls, sheet_trans)
             
-            # Cache categories
-            categories_cache = {}
-            all_cats = query_db('SELECT id, name FROM categories')
-            for c in all_cats:
-                categories_cache[c['name']] = c['id']
+            # Cache categories (already loaded in step 1.5, but just in case)
+            if not categories_cache:
+                all_cats = query_db('SELECT id, name FROM categories')
+                for c in all_cats:
+                    categories_cache[c['name']] = c['id']
                 
             count_trans = 0
             for index, row in df.iterrows():
@@ -262,6 +297,25 @@ def import_excel():
                     note = str(row['Ghi chú']) if 'Ghi chú' in row and pd.notna(row['Ghi chú']) else ''
                     fund_purpose = str(row['Mục đích quỹ']) if 'Mục đích quỹ' in row and pd.notna(row['Mục đích quỹ']) else None
                     trans_type = row['Loại']
+                    
+                    # Ensure Fund Category exists if fund_purpose is set
+                    if fund_purpose:
+                        fund_purpose = fund_purpose.strip()
+                        # Check if this fund purpose exists in categories (as subtype='fund')
+                        # We use a separate cache or query directly because funds are distinct from normal categories
+                        existing_fund = query_db("SELECT id FROM categories WHERE name = ? AND subtype = 'fund'", (fund_purpose,), one=True)
+                        if not existing_fund:
+                            # Create it
+                            # We create 2 entries (Thu and Chi) or just one? 
+                            # The system seems to use name+subtype='fund' to identify funds. 
+                            # Let's create one with type='Chi' (default) and one 'Thu' to be safe?
+                            # Actually api_funds.py selects DISTINCT name. So one is enough.
+                            # But to be clean, let's create one.
+                            query_db("INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)", 
+                                    (fund_purpose, 'Chi', 'fund', '💰'))
+                            # Also create Thu version? Some logic might depend on it.
+                            query_db("INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)", 
+                                    (fund_purpose, 'Thu', 'fund', '💰'))
                     
                     query_db('''
                         INSERT INTO transactions (user_id, category_id, amount, date, type, note, fund_purpose)
