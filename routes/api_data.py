@@ -156,6 +156,8 @@ def import_excel():
                     errors.append(f"Lỗi User {row.get('username')}: {e}")
             success_msg.append(f"Đã thêm {count_users} users mới.")
         
+        # Reload cache to include existing users
+        all_users = query_db('SELECT id, username FROM users')
         for u in all_users:
             users_cache[u['username']] = u['id']
 
