@@ -1,0 +1,131 @@
+    });
+
+    // ===== NAVIGATION HANDLERS =====
+    document.getElementById('nav-nhap-vao')?.addEventListener('click', function() {
+        document.getElementById('form-section').style.display = 'block';
+        document.getElementById('lich-section').style.display = 'none';
+        document.getElementById('bao-cao-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'none';
+        document.querySelectorAll('.chi-bottom-item').forEach(function(i) { i.classList.remove('active'); });
+        document.getElementById('nav-nhap-vao').classList.add('active');
+        document.querySelector('.chi-tabs').style.display = 'grid';
+    });
+
+    document.getElementById('nav-lich')?.addEventListener('click', function() {
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('lich-section').style.display = 'block';
+        document.getElementById('bao-cao-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'none';
+        document.querySelectorAll('.chi-bottom-item').forEach(function(i) { i.classList.remove('active'); });
+        document.getElementById('nav-lich').classList.add('active');
+        document.querySelector('.chi-tabs').style.display = 'none';
+        loadLichData(true).then(function(data) {
+            if (data) {
+                renderLichCalendar();
+                renderLichTransactions();
+                updateLichSummary();
+            }
+        });
+    });
+
+    document.getElementById('nav-bao-cao')?.addEventListener('click', function() {
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('lich-section').style.display = 'none';
+        document.getElementById('bao-cao-section').style.display = 'block';
+        document.getElementById('menu-section').style.display = 'none';
+        document.querySelectorAll('.chi-bottom-item').forEach(function(i) { i.classList.remove('active'); });
+        document.getElementById('nav-bao-cao').classList.add('active');
+        document.querySelector('.chi-tabs').style.display = 'none';
+        loadReports();
+    });
+
+    document.getElementById('nav-menu')?.addEventListener('click', function() {
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('lich-section').style.display = 'none';
+        document.getElementById('bao-cao-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'block';
+        document.querySelectorAll('.chi-bottom-item').forEach(function(i) { i.classList.remove('active'); });
+        document.getElementById('nav-menu').classList.add('active');
+        document.querySelector('.chi-tabs').style.display = 'none';
+        var listType = document.getElementById('category-list-type');
+        if (listType) loadCategoryList(listType.value);
+    });
+
+    // Category list type change
+    var categoryListType = document.getElementById('category-list-type');
+    if (categoryListType) {
+        categoryListType.addEventListener('change', function() {
+            loadCategoryList(categoryListType.value);
+        });
+    }
+
+    // Load category list
+    async function loadCategoryList(type) {
+        var container = document.getElementById('category-list-container');
+        if (!container) return;
+
+        container.innerHTML = '<div class="chi-cat placeholder">Đang tải...</div>';
+
+        try {
+            var res = await fetch('/api/categories/' + type);
+            if (!res.ok) throw new Error('Lỗi');
+            var data = await res.json();
+            var items = data.categories || [];
+            
+            container.innerHTML = '';
+            if (items.length === 0) {
+                container.innerHTML = '<div class="chi-cat placeholder">Chưa có danh mục</div>';
+                return;
+            }
+
+            items.forEach(function(item) {
+                var div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.75rem;margin-bottom:0.5rem;background:#fff;border-radius:0.5rem;border:1px solid #e5e7eb;';
+
+                var valueText = item.value || '';
+                var parts = valueText.split(' ');
+                var icon = parts[0] || '🏷️';
+                var name = parts.slice(1).join(' ') || valueText;
+
+                var info = document.createElement('div');
+                info.style.cssText = 'display:flex;align-items:center;gap:0.75rem;';
+                info.innerHTML = '<span style="font-size:1.2rem;">' + icon + '</span><span style="font-weight:600;">' + name + '</span>';
+
+                var actions = document.createElement('div');
+                actions.style.cssText = 'display:flex;gap:0.5rem;';
+
+                var editBtn = document.createElement('button');
+                editBtn.innerHTML = '✏️';
+                editBtn.className = 'btn';
+                editBtn.style.padding = '0.4rem';
+                editBtn.onclick = function() { alert('Sửa: ' + name); };
+
+                var delBtn = document.createElement('button');
+                delBtn.innerHTML = '🗑️';
+                delBtn.className = 'btn';
+                delBtn.style.cssText = 'padding:0.4rem;color:#dc2626;';
+                delBtn.onclick = function() {
+                    if (confirm('Xóa "' + name + '"?')) {
+                        fetch('/api/categories', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name: name, type: type })
+                        }).then(function(r) {
+                            if (r.ok) { alert('Đã xóa!'); loadCategoryList(type); }
+                            else { alert('Lỗi!'); }
+                        });
+                    }
+                };
+
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+                div.appendChild(info);
+                div.appendChild(actions);
+                container.appendChild(div);
+            });
+        } catch (err) {
+            container.innerHTML = '<div class="chi-cat placeholder">Lỗi: ' + err.message + '</div>';
+        }
+    }
+
+}); // End DOMContentLoaded

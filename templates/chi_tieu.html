@@ -212,7 +212,7 @@
             </div>
 
             <!-- Báo cáo tháng trong năm hiện tại -->
-            <div class="chi-field" style="margin-top: 2rem;">
+            <div class="chi-field" style="margin-top: 0.25rem;">
                 <label>Báo cáo tháng trong năm hiện tại (Thu / Chi / Quỹ)</label>
                 <div class="report-card">
                     <canvas id="report-chart-monthly" height="240"></canvas>
@@ -223,7 +223,7 @@
             </div>
 
             <!-- Báo cáo ngày trong tháng hiện tại -->
-            <div class="chi-field" style="margin-top: 2rem;">
+            <div class="chi-field" style="margin-top: 0.25rem;">
                 <label id="daily-chart-label">Báo cáo ngày trong tháng hiện tại (Thu / Chi / Quỹ)</label>
                 <div class="report-card">
                     <canvas id="report-chart-daily" height="240"></canvas>
@@ -231,22 +231,19 @@
             </div>
 
             <!-- Phân bổ chi tiêu theo danh mục -->
-            <div class="chi-field" style="margin-top: 2rem;">
+            <div class="chi-field" style="margin-top: 0.25rem;">
                 <label id="category-chart-label">Phân bổ chi tiêu theo danh mục tháng hiện tại</label>
                 <div class="report-card">
-                    <div
-                        style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2rem;">
-                        <div style="height: 300px; width: 300px; position: relative;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                        <div style="height: 280px; width: 280px; position: relative;">
                             <canvas id="report-chart-category"></canvas>
                         </div>
                         <div id="custom-legend"
-                            style="background: rgba(255, 255, 255, 0.95); padding: 1.5rem; border-radius: 16px; color: #1f2937; min-width: 250px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <!-- Legend items will be injected here -->
+                            style="background: rgba(255, 255, 255, 0.95); padding: 15px 20px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); min-width: 280px; color: #333;">
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
 
         <!-- Menu Section -->
@@ -297,106 +294,105 @@
                     <div class="chi-cat placeholder">Chọn loại danh mục để xem danh sách</div>
                 </div>
             </div>
-        </div>
 
-        <!-- Modal sửa danh mục -->
-        <div class="chi-modal-overlay" id="edit-category-modal" style="display: none;">
-            <div class="chi-modal">
-                <div class="chi-modal-header">
-                    <h3>✏️ Sửa danh mục</h3>
-                    <button type="button" class="chi-modal-close" id="edit-category-close">&times;</button>
+            <!-- Modal sửa danh mục -->
+            <div class="chi-modal-overlay" id="edit-category-modal" style="display: none;">
+                <div class="chi-modal">
+                    <div class="chi-modal-header">
+                        <h3>✏️ Sửa danh mục</h3>
+                        <button type="button" class="chi-modal-close" id="edit-category-close">&times;</button>
+                    </div>
+                    <form id="edit-category-form">
+                        <input type="hidden" id="edit-category-row">
+                        <input type="hidden" id="edit-category-type">
+                        <input type="hidden" id="edit-category-column">
+                        <input type="hidden" id="edit-category-old-value">
+                        <div class="chi-field">
+                            <label>Icon</label>
+                            <input type="text" class="chi-input" id="edit-icon-picker-input" list="icon-list"
+                                placeholder="Chọn hoặc nhập icon (emoji)">
+                        </div>
+                        <div class="chi-field">
+                            <label>Tên danh mục *</label>
+                            <input type="text" class="chi-input" id="edit-category-name" placeholder="Nhập tên danh mục"
+                                required>
+                        </div>
+                        <div class="chi-modal-actions">
+                            <button type="button" class="chi-btn-cancel" id="edit-category-cancel">Hủy</button>
+                            <button type="submit" class="chi-btn-submit">Lưu</button>
+                        </div>
+                    </form>
                 </div>
-                <form id="edit-category-form">
-                    <input type="hidden" id="edit-category-row">
-                    <input type="hidden" id="edit-category-type">
-                    <input type="hidden" id="edit-category-column">
-                    <input type="hidden" id="edit-category-old-value">
-                    <div class="chi-field">
-                        <label>Icon</label>
-                        <input type="text" class="chi-input" id="edit-icon-picker-input" list="icon-list"
-                            placeholder="Chọn hoặc nhập icon (emoji)">
-                    </div>
-                    <div class="chi-field">
-                        <label>Tên danh mục *</label>
-                        <input type="text" class="chi-input" id="edit-category-name" placeholder="Nhập tên danh mục"
-                            required>
-                    </div>
-                    <div class="chi-modal-actions">
-                        <button type="button" class="chi-btn-cancel" id="edit-category-cancel">Hủy</button>
-                        <button type="submit" class="chi-btn-submit">Lưu</button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
 
-    <!-- Calendar Modal -->
-    <div class="calendar-modal" id="calendar-modal" style="display: none;">
-        <div class="calendar-overlay" id="calendar-overlay"></div>
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <button type="button" class="calendar-nav-btn" id="calendar-prev-month">←</button>
-                <div class="calendar-month-year" id="calendar-month-year"></div>
-                <button type="button" class="calendar-nav-btn" id="calendar-next-month">→</button>
-            </div>
-            <div class="calendar-weekdays">
-                <div class="calendar-weekday">CN</div>
-                <div class="calendar-weekday">T2</div>
-                <div class="calendar-weekday">T3</div>
-                <div class="calendar-weekday">T4</div>
-                <div class="calendar-weekday">T5</div>
-                <div class="calendar-weekday">T6</div>
-                <div class="calendar-weekday">T7</div>
-            </div>
-            <div class="calendar-days" id="calendar-days"></div>
-        </div>
-    </div>
-
-    <!-- Calendar Popup for Month/Year Selection -->
-    <div class="chi-lich-popup-overlay" id="lich-popup-overlay" style="display: none;">
-        <div class="chi-lich-popup">
-            <div class="chi-lich-popup-nav">
-                <button class="chi-lich-nav-btn" id="lich-popup-prev-month">←</button>
-                <div class="chi-lich-month-year" id="lich-popup-month-year">Tháng 12 2025</div>
-                <button class="chi-lich-nav-btn" id="lich-popup-next-month">→</button>
-            </div>
-            <div class="chi-lich-popup-calendar">
-                <div class="chi-lich-popup-weekdays">
-                    <div class="chi-lich-popup-weekday">CN</div>
-                    <div class="chi-lich-popup-weekday">T2</div>
-                    <div class="chi-lich-popup-weekday">T3</div>
-                    <div class="chi-lich-popup-weekday">T4</div>
-                    <div class="chi-lich-popup-weekday">T5</div>
-                    <div class="chi-lich-popup-weekday">T6</div>
-                    <div class="chi-lich-popup-weekday">T7</div>
+        <!-- Calendar Modal -->
+        <div class="calendar-modal" id="calendar-modal" style="display: none;">
+            <div class="calendar-overlay" id="calendar-overlay"></div>
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button type="button" class="calendar-nav-btn" id="calendar-prev-month">←</button>
+                    <div class="calendar-month-year" id="calendar-month-year"></div>
+                    <button type="button" class="calendar-nav-btn" id="calendar-next-month">→</button>
                 </div>
-                <div class="chi-lich-popup-days" id="lich-popup-days"></div>
+                <div class="calendar-weekdays">
+                    <div class="calendar-weekday">CN</div>
+                    <div class="calendar-weekday">T2</div>
+                    <div class="calendar-weekday">T3</div>
+                    <div class="calendar-weekday">T4</div>
+                    <div class="calendar-weekday">T5</div>
+                    <div class="calendar-weekday">T6</div>
+                    <div class="calendar-weekday">T7</div>
+                </div>
+                <div class="calendar-days" id="calendar-days"></div>
             </div>
         </div>
-    </div>
+
+        <!-- Calendar Popup for Month/Year Selection -->
+        <div class="chi-lich-popup-overlay" id="lich-popup-overlay" style="display: none;">
+            <div class="chi-lich-popup">
+                <div class="chi-lich-popup-nav">
+                    <button class="chi-lich-nav-btn" id="lich-popup-prev-month">←</button>
+                    <div class="chi-lich-month-year" id="lich-popup-month-year">Tháng 12 2025</div>
+                    <button class="chi-lich-nav-btn" id="lich-popup-next-month">→</button>
+                </div>
+                <div class="chi-lich-popup-calendar">
+                    <div class="chi-lich-popup-weekdays">
+                        <div class="chi-lich-popup-weekday">CN</div>
+                        <div class="chi-lich-popup-weekday">T2</div>
+                        <div class="chi-lich-popup-weekday">T3</div>
+                        <div class="chi-lich-popup-weekday">T4</div>
+                        <div class="chi-lich-popup-weekday">T5</div>
+                        <div class="chi-lich-popup-weekday">T6</div>
+                        <div class="chi-lich-popup-weekday">T7</div>
+                    </div>
+                    <div class="chi-lich-popup-days" id="lich-popup-days"></div>
+                </div>
+            </div>
+        </div>
 
 
-    <!-- Bottom Navigation -->
-    <div class="chi-bottom">
-        <button class="chi-bottom-item active" id="nav-nhap-vao">
-            <span class="icon">✏️</span>
-            <span>Nhập vào</span>
-        </button>
-        <button class="chi-bottom-item" id="nav-lich">
-            <span class="icon">📅</span>
-            <span>Lịch</span>
-        </button>
-        <button class="chi-bottom-item" id="nav-bao-cao">
-            <span class="icon">📊</span>
-            <span>Báo cáo</span>
-        </button>
-        <button class="chi-bottom-item">
-            <span class="icon">⋯</span>
-            <span>Menu</span>
-        </button>
-    </div>
+        <!-- Bottom Navigation -->
+        <div class="chi-bottom">
+            <button class="chi-bottom-item active" id="nav-nhap-vao">
+                <span class="icon">✏️</span>
+                <span>Nhập vào</span>
+            </button>
+            <button class="chi-bottom-item" id="nav-lich">
+                <span class="icon">📅</span>
+                <span>Lịch</span>
+            </button>
+            <button class="chi-bottom-item" id="nav-bao-cao">
+                <span class="icon">📊</span>
+                <span>Báo cáo</span>
+            </button>
+            <button class="chi-bottom-item" id="nav-menu">
+                <span class="icon">⋯</span>
+                <span>Menu</span>
+            </button>
+        </div>
 
-    <script src="{{ url_for('static', filename='chi_tieu.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='chi_tieu.js') }}?v=2.1.0" defer></script>
 </body>
 
 </html>

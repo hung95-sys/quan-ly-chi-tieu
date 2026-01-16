@@ -7,7 +7,8 @@ import io
 from datetime import datetime
 import traceback
 from utils.decorators import admin_required
-from utils.db_utils import query_db
+from utils.db_utils import query_db, get_db_connection
+import sqlite3
 
 bp = Blueprint('api_data', __name__)
 
@@ -103,7 +104,8 @@ def export_excel():
 @bp.route('/api/import/excel', methods=['POST'])
 @admin_required
 def import_excel():
-    """Import dữ liệu từ file Excel (Full Restore)"""
+    """Import dữ liệu từ file Excel (Full Restore) - Optimized for Speed"""
+    conn = None
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'Không có file được gửi lên'}), 400
@@ -124,10 +126,12 @@ def import_excel():
         success_msg = []
         errors = []
         
-        from werkzeug.security import generate_password_hash
+        # --- START TRANSACTION ---
+        conn = get_db_connection()
+        # Turn off auto-commit behavior if any (SQLite default is usually fine but explicit commit is better)
         
         # --- 0. CLEAR EXISTING TRANSACTIONS (Replace Mode) ---
-        query_db('DELETE FROM transactions')
+        conn.execute('DELETE FROM transactions')
         success_msg.append("Đã xóa dữ liệu giao dịch cũ.")
         
         # --- 1. Restore Users ---
@@ -142,26 +146,29 @@ def import_excel():
                     role = str(row['role']).strip()
                     active = int(row['active'])
                     
-                    existing = query_db('SELECT id FROM users WHERE username = ?', (username,), one=True)
+                    cur = conn.execute('SELECT id FROM users WHERE username = ?', (username,))
+                    existing = cur.fetchone()
+                    
                     if existing:
                         users_cache[username] = existing['id']
                     else:
                         password_hash = generate_password_hash('123456')
-                        query_db('INSERT INTO users (username, password, name, role, active) VALUES (?, ?, ?, ?, ?)',
+                        conn.execute('INSERT INTO users (username, password, name, role, active) VALUES (?, ?, ?, ?, ?)',
                                 (username, password_hash, name, role, active))
-                        new_user = query_db('SELECT id FROM users WHERE username = ?', (username,), one=True)
+                        cur = conn.execute('SELECT id FROM users WHERE username = ?', (username,))
+                        new_user = cur.fetchone()
                         users_cache[username] = new_user['id']
                         count_users += 1
                 except Exception as e:
                     errors.append(f"Lỗi User {row.get('username')}: {e}")
             success_msg.append(f"Đã thêm {count_users} users mới.")
         
-        # Reload cache to include existing users
-        all_users = query_db('SELECT id, username FROM users')
-        for u in all_users:
+        # Reload cache
+        cur = conn.execute('SELECT id, username FROM users')
+        for u in cur.fetchall():
             users_cache[u['username']] = u['id']
 
-        # --- 1.5 Restore Categories (New) ---
+        # --- 1.5 Restore Categories ---
         categories_cache = {} # name -> id
         if 'Categories' in xls.sheet_names:
             df_cats = pd.read_excel(xls, 'Categories')
@@ -173,27 +180,44 @@ def import_excel():
                     subtype = str(row['subtype']).strip() if 'subtype' in row and pd.notna(row['subtype']) else 'default'
                     icon = str(row['icon']).strip() if 'icon' in row and pd.notna(row['icon']) else '📝'
                     
-                    existing = query_db('SELECT id FROM categories WHERE name = ?', (name,), one=True)
+                    cur = conn.execute('SELECT id FROM categories WHERE name = ?', (name,))
+                    existing = cur.fetchone()
+                    
                     if existing:
                         categories_cache[name] = existing['id']
-                        # Optional: Update icon/type if needed? For now, skip to preserve existing.
+                        # Update existing
+                        try:
+                            conn.execute('UPDATE categories SET type = ?, subtype = ?, icon = ? WHERE id = ?',
+                                    (cat_type, subtype, icon, existing['id']))
+                        except sqlite3.IntegrityError:
+                            pass # Ignore UNIQUE constraint on update
                     else:
-                        query_db('INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)',
-                                (name, cat_type, subtype, icon))
-                        new_cat = query_db('SELECT id FROM categories WHERE name = ?', (name,), one=True)
-                        categories_cache[name] = new_cat['id']
-                        count_cats += 1
+                        try:
+                            conn.execute('INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)',
+                                    (name, cat_type, subtype, icon))
+                            cur = conn.execute('SELECT id FROM categories WHERE name = ?', (name,))
+                            new_cat = cur.fetchone()
+                            if new_cat:
+                                categories_cache[name] = new_cat['id']
+                                count_cats += 1
+                        except sqlite3.IntegrityError:
+                             # Retry fetch if race condition/duplicate
+                            cur = conn.execute('SELECT id FROM categories WHERE name = ?', (name,))
+                            existing_retry = cur.fetchone()
+                            if existing_retry:
+                                categories_cache[name] = existing_retry['id']
+
                 except Exception as e:
                     errors.append(f"Lỗi Category {row.get('name')}: {e}")
             success_msg.append(f"Đã đồng bộ {count_cats} danh mục mới.")
         
-        # Reload cache to include all categories (including pre-existing ones)
-        all_cats = query_db('SELECT id, name FROM categories')
-        for c in all_cats:
+        # Reload cache
+        cur = conn.execute('SELECT id, name FROM categories')
+        for c in cur.fetchall():
             categories_cache[c['name']] = c['id']
 
         # --- 2. Restore Fund Groups ---
-        groups_cache = {} # name -> id
+        groups_cache = {} 
         if 'FundGroups' in xls.sheet_names:
             df_groups = pd.read_excel(xls, 'FundGroups')
             count_groups = 0
@@ -201,14 +225,16 @@ def import_excel():
                 try:
                     name = str(row['name']).strip()
                     created_by_user = str(row['created_by']).strip()
-                    creator_id = users_cache.get(created_by_user, 1) # Default to admin (id 1) if not found
+                    creator_id = users_cache.get(created_by_user, 1)
                     
-                    existing = query_db('SELECT id FROM fund_groups WHERE name = ?', (name,), one=True)
+                    cur = conn.execute('SELECT id FROM fund_groups WHERE name = ?', (name,))
+                    existing = cur.fetchone()
                     if existing:
                         groups_cache[name] = existing['id']
                     else:
-                        query_db('INSERT INTO fund_groups (name, created_by) VALUES (?, ?)', (name, creator_id))
-                        new_group = query_db('SELECT id FROM fund_groups WHERE name = ?', (name,), one=True)
+                        conn.execute('INSERT INTO fund_groups (name, created_by) VALUES (?, ?)', (name, creator_id))
+                        cur = conn.execute('SELECT id FROM fund_groups WHERE name = ?', (name,))
+                        new_group = cur.fetchone()
                         groups_cache[name] = new_group['id']
                         count_groups += 1
                 except Exception as e:
@@ -216,8 +242,8 @@ def import_excel():
             success_msg.append(f"Đã thêm {count_groups} nhóm quỹ mới.")
             
         # Reload cache
-        all_groups = query_db('SELECT id, name FROM fund_groups')
-        for g in all_groups:
+        cur = conn.execute('SELECT id, name FROM fund_groups')
+        for g in cur.fetchall():
             groups_cache[g['name']] = g['id']
 
         # --- 3. Restore Group Members ---
@@ -233,9 +259,10 @@ def import_excel():
                     uid = users_cache.get(user_username)
                     
                     if gid and uid:
-                        existing = query_db('SELECT id FROM fund_group_members WHERE group_id = ? AND user_id = ?', (gid, uid), one=True)
+                        cur = conn.execute('SELECT id FROM fund_group_members WHERE group_id = ? AND user_id = ?', (gid, uid))
+                        existing = cur.fetchone()
                         if not existing:
-                            query_db('INSERT INTO fund_group_members (group_id, user_id) VALUES (?, ?)', (gid, uid))
+                            conn.execute('INSERT INTO fund_group_members (group_id, user_id) VALUES (?, ?)', (gid, uid))
                             count_members += 1
                 except Exception as e:
                     errors.append(f"Lỗi Member {row.get('user_username')}: {e}")
@@ -246,97 +273,100 @@ def import_excel():
         if sheet_trans:
             df = pd.read_excel(xls, sheet_trans)
             
-            # Cache categories (already loaded in step 1.5, but just in case)
+            # Ensure categories cache is populated
             if not categories_cache:
-                all_cats = query_db('SELECT id, name FROM categories')
-                for c in all_cats:
+                cur = conn.execute('SELECT id, name FROM categories')
+                for c in cur.fetchall():
                     categories_cache[c['name']] = c['id']
                 
             count_trans = 0
+            # Prepare batch insert data
+            trans_to_insert = []
+            
             for index, row in df.iterrows():
                 try:
                     # Resolve User
-                    # Support both 'Username' (new format) and 'Người dùng' (old format/name)
                     user_id = None
                     if 'Username' in row and pd.notna(row['Username']):
                         user_id = users_cache.get(str(row['Username']).strip())
                     
                     if not user_id and 'Người dùng' in row:
-                        # Fallback to name lookup (less reliable)
                         u_name = str(row['Người dùng']).strip()
-                        # Try to find user by name
-                        u = query_db('SELECT id FROM users WHERE name = ?', (u_name,), one=True)
+                        cur = conn.execute('SELECT id FROM users WHERE name = ?', (u_name,))
+                        u = cur.fetchone()
                         if u: user_id = u['id']
                         
                     if not user_id:
-                        # Create temp user if absolutely necessary, or skip?
-                        # Let's create based on name if provided
+                         # Create user on fly?
                         if 'Người dùng' in row:
                              u_name = str(row['Người dùng']).strip()
-                             username = u_name.lower().replace(' ', '') + f"_{int(datetime.now().timestamp())}"
+                             username = u_name.lower().replace(' ', '') + f"_{int(datetime.now().timestamp())}_{index}"
                              password_hash = generate_password_hash('123456')
-                             query_db('INSERT INTO users (username, password, name, role, active) VALUES (?, ?, ?, ?, ?)',
+                             conn.execute('INSERT INTO users (username, password, name, role, active) VALUES (?, ?, ?, ?, ?)',
                                      (username, password_hash, u_name, 'user', 1))
-                             new_u = query_db('SELECT id FROM users WHERE username = ?', (username,), one=True)
+                             cur = conn.execute('SELECT id FROM users WHERE username = ?', (username,))
+                             new_u = cur.fetchone()
                              user_id = new_u['id']
                              users_cache[username] = user_id
                     
-                    if not user_id: continue # Skip if no user found
+                    if not user_id: continue 
                     
                     # Resolve Category
                     cat_name = str(row['Danh mục']).strip()
                     cat_id = categories_cache.get(cat_name)
                     if not cat_id:
                         cat_type = row['Loại'] if 'Loại' in row else 'Chi'
-                        query_db('INSERT INTO categories (name, type, icon) VALUES (?, ?, ?)', (cat_name, cat_type, '📝'))
-                        new_cat = query_db('SELECT id FROM categories WHERE name = ?', (cat_name,), one=True)
+                        conn.execute('INSERT INTO categories (name, type, icon) VALUES (?, ?, ?)', (cat_name, cat_type, '📝'))
+                        cur = conn.execute('SELECT id FROM categories WHERE name = ?', (cat_name,))
+                        new_cat = cur.fetchone()
                         cat_id = new_cat['id']
                         categories_cache[cat_name] = cat_id
                         
-                    # Normalize date to YYYY-MM-DD format (no time)
+                    # Normalize date
                     date_val = pd.to_datetime(row['Ngày']).strftime('%Y-%m-%d')
                     amount = float(row['Số tiền'])
                     note = str(row['Ghi chú']) if 'Ghi chú' in row and pd.notna(row['Ghi chú']) else ''
                     fund_purpose = str(row['Mục đích quỹ']) if 'Mục đích quỹ' in row and pd.notna(row['Mục đích quỹ']) else None
                     trans_type = row['Loại']
                     
-                    # Ensure Fund Category exists if fund_purpose is set
+                    # Fund purpose check
                     if fund_purpose:
                         fund_purpose = fund_purpose.strip()
-                        # Check if this fund purpose exists in categories (as subtype='fund')
-                        # We use a separate cache or query directly because funds are distinct from normal categories
-                        existing_fund = query_db("SELECT id FROM categories WHERE name = ? AND subtype = 'fund'", (fund_purpose,), one=True)
+                        cur = conn.execute("SELECT id FROM categories WHERE name = ? AND subtype = 'fund'", (fund_purpose,))
+                        existing_fund = cur.fetchone()
                         if not existing_fund:
-                            # Create it
-                            # We create 2 entries (Thu and Chi) or just one? 
-                            # The system seems to use name+subtype='fund' to identify funds. 
-                            # Let's create one with type='Chi' (default) and one 'Thu' to be safe?
-                            # Actually api_funds.py selects DISTINCT name. So one is enough.
-                            # But to be clean, let's create one.
-                            query_db("INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)", 
-                                    (fund_purpose, 'Chi', 'fund', '💰'))
-                            # Also create Thu version? Some logic might depend on it.
-                            query_db("INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)", 
-                                    (fund_purpose, 'Thu', 'fund', '💰'))
+                            conn.execute("INSERT INTO categories (name, type, subtype, icon) VALUES (?, ?, ?, ?)", 
+                                        (fund_purpose, 'Chi', 'fund', '💰'))
                     
-                    query_db('''
-                        INSERT INTO transactions (user_id, category_id, amount, date, type, note, fund_purpose)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (user_id, cat_id, amount, date_val, trans_type, note, fund_purpose))
+                    # Add to batch
+                    trans_to_insert.append((user_id, date_val, trans_type, cat_id, amount, note, fund_purpose))
                     count_trans += 1
                     
-                except Exception as row_err:
-                    errors.append(f"Lỗi Giao dịch dòng {index}: {str(row_err)}")
+                except Exception as e:
+                    errors.append(f"Lỗi dòng {index + 2}: {e}")
             
-            success_msg.append(f"Đã import {count_trans} giao dịch.")
+            # Execute batch insert
+            if trans_to_insert:
+                conn.executemany('''
+                    INSERT INTO transactions (user_id, date, type, category_id, amount, note, fund_purpose)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', trans_to_insert)
                 
+            success_msg.append(f"Đã import {count_trans} giao dịch.")
+
+        # --- COMMIT TRANSACTION ---
+        conn.commit()
+        
         return jsonify({
             'success': True,
-            'message': '\\n'.join(success_msg),
+            'message': '\n'.join(success_msg),
             'errors': errors
         })
-
+        
     except Exception as e:
+        if conn: conn.rollback()
         print(f"Lỗi khi import excel: {e}")
         traceback.print_exc()
         return jsonify({'error': f'Lỗi server: {str(e)}'}), 500
+    finally:
+        if conn: conn.close()

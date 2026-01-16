@@ -16,7 +16,19 @@ def get_categories():
     try:
         category_type = request.args.get('type', 'Chi').strip()
         
-        # Map type to DB type
+        # Handle fund (quy) type separately
+        if category_type.lower() == 'quy':
+            # Return fund purposes - use DISTINCT to avoid duplicates
+            rows = query_db(
+                "SELECT DISTINCT name, icon FROM categories WHERE subtype = 'fund' ORDER BY name"
+            )
+            categories = []
+            for row in rows:
+                val = f"{row['icon']} {row['name']}" if row['icon'] else row['name']
+                categories.append(val)
+            return jsonify({'categories': categories})
+        
+        # Map type to DB type for normal categories
         db_type = 'Chi'
         if category_type.lower() == 'thu':
             db_type = 'Thu'

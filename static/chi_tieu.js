@@ -914,7 +914,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 let categoryDisplay = trans.danh_muc;
-                if ((trans.danh_muc === 'Thu quỹ' || trans.danh_muc === 'Chi quỹ') && trans.quy && trans.quy.trim() && trans.quy.toLowerCase() !== 'nan') {
+                const categoryNameOnly = trans.danh_muc.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]\s*/gu, '').trim();
+                if ((categoryNameOnly === 'Thu quỹ' || categoryNameOnly === 'Chi quỹ') && trans.quy && trans.quy.trim() && trans.quy.toLowerCase() !== 'nan') {
                     categoryDisplay = trans.quy.trim();
                 }
 
@@ -922,8 +923,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="chi-lich-transaction-details">
                             <div class="chi-lich-transaction-category">
                                 ${categoryDisplay}
-                                ${(trans.danh_muc === 'Thu quỹ' || trans.danh_muc === 'Chi quỹ') && trans.quy && trans.quy.trim() && trans.quy.toLowerCase() !== 'nan'
-                        ? `<span class="chi-lich-fund-badge">${trans.danh_muc}</span>`
+                                ${(categoryNameOnly === 'Thu quỹ' || categoryNameOnly === 'Chi quỹ') && trans.quy && trans.quy.trim() && trans.quy.toLowerCase() !== 'nan'
+                        ? `<span class="chi-lich-fund-badge">${categoryNameOnly}</span>`
                         : ''}
                             </div>
                             ${trans.ghi_chu && trans.ghi_chu.trim() && trans.ghi_chu.toLowerCase() !== 'nan' ? `<div class="chi-lich-transaction-note">${trans.ghi_chu}</div>` : ''}
@@ -1062,9 +1063,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Open edit transaction modal
+    // ==========================================
+    // EDIT TRANSACTION MODAL - COMPLETE REWRITE
+    // ==========================================
+
     async function openEditTransactionModal(trans) {
-        // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
+        console.log('[MODAL] Opening edit modal for transaction:', trans);
+
+        // ===== STEP 1: Determine transaction type =====
+        const categoryNameOnly = (trans.danh_muc || '').replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]\s*/gu, '').trim();
+        const isFundTransaction = categoryNameOnly === 'Thu quỹ' || categoryNameOnly === 'Chi quỹ';
+
+        let transType;
+        if (isFundTransaction) {
+            transType = categoryNameOnly === 'Thu quỹ' ? 'thuquy' : 'chiquy';
+        } else {
+            transType = trans.loai; // 'thu' or 'chi'
+        }
+
+        console.log('[MODAL] Transaction type:', transType, '(isFund:', isFundTransaction + ')');
+
+        // ===== STEP 2: Format date =====
         let formattedDate = '';
         if (trans.ngay) {
             const parts = trans.ngay.split('/');
@@ -1073,123 +1092,168 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Fetch categories for the dropdown
+        // ===== STEP 3: Fetch categories =====
         let categories = [];
+        let apiType;
+
+        if (transType === 'thuquy' || transType === 'chiquy') {
+            apiType = 'quy';
+        } else if (transType === 'thu') {
+            apiType = 'Thu';
+        } else {
+            apiType = 'Chi';
+        }
+
+        console.log('[MODAL] Fetching categories for API type:', apiType);
+
         try {
-            const type = trans.loai === 'thu' ? 'Thu' : 'Chi';
-            const res = await fetch(`/api/categories?type=${type}`);
+            const res = await fetch(`/api/categories?type=${apiType}`);
             const data = await res.json();
-            if (data.categories) {
-                categories = data.categories;
-            }
+            categories = data.categories || [];
+            console.log('[MODAL] Loaded', categories.length, 'categories:', categories.slice(0, 3));
         } catch (err) {
-            console.error('Error fetching categories:', err);
-            // Fallback: just use the current category if fetch fails
+            console.error('[MODAL] Error fetching categories:', err);
             categories = [trans.danh_muc];
         }
 
-        // Build options
-        const options = categories.map(cat => {
-            const isSelected = cat === trans.danh_muc ? 'selected' : '';
+        // ===== STEP 4: Build category dropdown options =====
+        const selectedValue = isFundTransaction ? trans.quy : trans.danh_muc;
+        console.log('[MODAL] Selected category value:', selectedValue);
+
+        const categoryOptions = categories.map(cat => {
+            const isSelected = cat === selectedValue ? 'selected' : '';
             return `<option value="${cat}" ${isSelected}>${cat}</option>`;
         }).join('');
 
-        // Format initial amount
+        // ===== STEP 5: Format amount =====
         const formattedAmount = trans.so_tien ? trans.so_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
 
-        // Tạo modal
+        // ===== STEP 6: Create modal HTML =====
         const modal = document.createElement('div');
         modal.className = 'edit-transaction-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+
         modal.innerHTML = `
-                    <div class="edit-transaction-content">
-                        <h3>✏️ Sửa giao dịch</h3>
-                        <div class="chi-field">
-                            <label>Ngày</label>
-                            <input type="date" class="chi-input" id="edit-trans-ngay" value="${formattedDate}" 
-                                   style="text-align: left; appearance: none; -webkit-appearance: none; width: 100%; display: block; box-sizing: border-box; min-height: 45px;">
-                        </div>
-                        <div class="chi-field">
-                            <label>Loại</label>
-                            <select class="chi-input" id="edit-trans-loai">
-                                <option value="thu" ${trans.loai === 'thu' ? 'selected' : ''}>Thu</option>
-                                <option value="chi" ${trans.loai === 'chi' ? 'selected' : ''}>Chi</option>
-                            </select>
-                        </div>
-                        <div class="chi-field">
-                            <label>Danh mục</label>
-                            <select class="chi-input" id="edit-trans-danh-muc">
-                                ${options}
-                            </select>
-                        </div>
-                        <div class="chi-field">
-                            <label>Số tiền</label>
-                            <input type="text" class="chi-input" id="edit-trans-so-tien" value="${formattedAmount}">
-                        </div>
-                        <div class="chi-field">
-                            <label>Ghi chú</label>
-                            <input type="text" class="chi-input" id="edit-trans-ghi-chu" value="${trans.ghi_chu || ''}">
-                        </div>
-                        <div class="chi-field">
-                            <label>Quỹ</label>
-                            <input type="text" class="chi-input" id="edit-trans-quy" value="${trans.quy || ''}">
-                        </div>
-                        <div class="edit-transaction-actions">
-                            <button type="button" class="cancel-btn">Hủy</button>
-                            <button type="button" class="save-btn">Lưu</button>
-                        </div>
-                    </div>
-                `;
+        <div class="edit-transaction-content" style="background:white;padding:2rem;border-radius:1rem;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;">
+            <h3 style="margin:0 0 1.5rem 0;">✏️ Sửa giao dịch</h3>
+            
+            <div class="chi-field" style="margin-bottom:1rem;">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Ngày</label>
+                <input type="date" class="chi-input" id="edit-trans-ngay" value="${formattedDate}" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+            </div>
+            
+            <div class="chi-field" style="margin-bottom:1rem;">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Loại</label>
+                <select class="chi-input" id="edit-trans-loai" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+                    <option value="thu" ${transType === 'thu' ? 'selected' : ''}>Thu nhập</option>
+                    <option value="chi" ${transType === 'chi' ? 'selected' : ''}>Chi tiêu</option>
+                    <option value="thuquy" ${transType === 'thuquy' ? 'selected' : ''}>Thu quỹ</option>
+                    <option value="chiquy" ${transType === 'chiquy' ? 'selected' : ''}>Chi quỹ</option>
+                </select>
+            </div>
+            
+            <div class="chi-field" style="margin-bottom:1rem;">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Danh mục</label>
+                <select class="chi-input" id="edit-trans-danh-muc" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+                    ${categoryOptions}
+                </select>
+            </div>
+            
+            <div class="chi-field" style="margin-bottom:1rem;">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Số tiền</label>
+                <input type="text" class="chi-input" id="edit-trans-so-tien" value="${formattedAmount}" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+            </div>
+            
+            <div class="chi-field" style="margin-bottom:1rem;">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Ghi chú</label>
+                <input type="text" class="chi-input" id="edit-trans-ghi-chu" value="${trans.ghi_chu || ''}" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+            </div>
+            
+            <div class="chi-field" id="edit-trans-quy-field" style="margin-bottom:1rem;${isFundTransaction ? '' : 'display:none;'}">
+                <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Quỹ</label>
+                <input type="text" class="chi-input" id="edit-trans-quy" value="${trans.quy || ''}" style="width:100%;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem;">
+            </div>
+            
+            <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                <button type="button" class="cancel-btn" style="flex:1;padding:0.75rem;border:1px solid #e5e7eb;background:white;border-radius:0.5rem;cursor:pointer;font-weight:600;">Hủy</button>
+                <button type="button" class="save-btn" style="flex:1;padding:0.75rem;background:#10b981;color:white;border:none;border-radius:0.5rem;cursor:pointer;font-weight:600;">Lưu</button>
+            </div>
+        </div>
+    `;
 
         document.body.appendChild(modal);
 
-        // Add format listener for amount input
+        // ===== STEP 7: Add event listeners =====
+
+        // Amount formatting
         const amountInput = modal.querySelector('#edit-trans-so-tien');
-        amountInput.addEventListener('input', function() {
-            // Remove non-digits
+        amountInput.addEventListener('input', function () {
             const raw = this.value.replace(/\D/g, '');
-            if (!raw) {
-                this.value = '';
-                return;
-            }
-            // Format with dots
-            this.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            this.value = raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
         });
 
-        // Handle category type change (Thu/Chi) to reload categories
+        // Type change handler
         const loaiSelect = modal.querySelector('#edit-trans-loai');
         const danhMucSelect = modal.querySelector('#edit-trans-danh-muc');
-        
-        loaiSelect.addEventListener('change', async () => {
-            const newType = loaiSelect.value === 'thu' ? 'Thu' : 'Chi';
+        const fundField = modal.querySelector('#edit-trans-quy-field');
+
+        loaiSelect.addEventListener('change', async function () {
+            const newType = this.value;
+            console.log('[MODAL] Type changed to:', newType);
+
+            // Determine API type
+            let newApiType;
+            if (newType === 'thuquy' || newType === 'chiquy') {
+                newApiType = 'quy';
+                fundField.style.display = 'block';
+            } else {
+                newApiType = newType === 'thu' ? 'Thu' : 'Chi';
+                fundField.style.display = 'none';
+            }
+
+            console.log('[MODAL] Loading categories for:', newApiType);
+
+            // Fetch new categories
             try {
-                const res = await fetch(`/api/categories?type=${newType}`);
+                const res = await fetch(`/api/categories?type=${newApiType}`);
                 const data = await res.json();
-                if (data.categories) {
-                    danhMucSelect.innerHTML = data.categories.map(cat => 
-                        `<option value="${cat}">${cat}</option>`
-                    ).join('');
-                }
+                const newCategories = data.categories || [];
+
+                console.log('[MODAL] Loaded', newCategories.length, 'new categories');
+
+                // Update dropdown
+                danhMucSelect.innerHTML = newCategories.map(cat =>
+                    `<option value="${cat}">${cat}</option>`
+                ).join('');
             } catch (err) {
-                console.error('Error reloading categories:', err);
+                console.error('[MODAL] Error loading categories:', err);
             }
         });
 
-        // Xử lý nút Hủy
+        // Category change handler
+        danhMucSelect.addEventListener('change', function () {
+            console.log('[MODAL] Category changed to:', this.value);
+        });
+
+        // Cancel button
         modal.querySelector('.cancel-btn').addEventListener('click', () => {
+            console.log('[MODAL] Cancelled');
             modal.remove();
         });
 
-        // Đóng khi click overlay
+        // Close on overlay click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.remove();
             }
         });
 
-        // Xử lý nút Lưu
+        // Save button
         modal.querySelector('.save-btn').addEventListener('click', async () => {
-            // Convert YYYY-MM-DD back to DD/MM/YYYY
-            const dateVal = document.getElementById('edit-trans-ngay').value;
+            console.log('[MODAL] Saving...');
+
+            // Get form values
+            const dateVal = modal.querySelector('#edit-trans-ngay').value;
             let ngayFormatted = '';
             if (dateVal) {
                 const [y, m, d] = dateVal.split('-');
@@ -1198,46 +1262,71 @@ document.addEventListener('DOMContentLoaded', function () {
                 ngayFormatted = trans.ngay;
             }
 
-            // Parse amount (remove dots)
-            const soTienRaw = document.getElementById('edit-trans-so-tien').value.replace(/\./g, '');
-            const soTien = parseFloat(soTienRaw);
+            const loai = loaiSelect.value;
+            const danhMuc = danhMucSelect.value;
+            const soTienRaw = amountInput.value.replace(/\./g, '');
+            const soTien = parseInt(soTienRaw) || 0;
+            const ghiChu = modal.querySelector('#edit-trans-ghi-chu').value;
+            const quy = modal.querySelector('#edit-trans-quy').value;
 
-            const updatedTrans = {
+            console.log('[MODAL] Form data:', { ngayFormatted, loai, danhMuc, soTien, ghiChu, quy });
+
+            // Prepare update data
+            let finalLoai = loai;
+            let finalDanhMuc = danhMuc;
+            let finalQuy = quy;
+
+            if (loai === 'thuquy' || loai === 'chiquy') {
+                finalLoai = loai === 'thuquy' ? 'Thu' : 'Chi';
+                // IMPORTANT: For fund transactions, category MUST be 'Thu quỹ' or 'Chi quỹ'
+                // The actual fund purpose (e.g. 'Tiết kiệm') goes into 'quy' field
+                // But wait, the dropdown 'danhMuc' currently holds the fund purpose!
+
+                finalDanhMuc = loai === 'thuquy' ? 'Thu quỹ' : 'Chi quỹ';
+                finalQuy = danhMuc; // Use the selected dropdown value as fund purpose
+            }
+
+            const updateData = {
                 ngay: ngayFormatted,
-                loai: document.getElementById('edit-trans-loai').value,
-                danh_muc: document.getElementById('edit-trans-danh-muc').value,
-                so_tien: isNaN(soTien) ? 0 : soTien,
-                ghi_chu: document.getElementById('edit-trans-ghi-chu').value,
-                quy: document.getElementById('edit-trans-quy').value
+                loai: finalLoai,
+                danh_muc: finalDanhMuc,
+                so_tien: soTien,
+                ghi_chu: ghiChu,
+                quy: finalQuy
             };
+
+            console.log('[MODAL] Sending update:', updateData);
 
             try {
                 const res = await fetch(`/api/expenses/${trans.row_id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedTrans)
+                    body: JSON.stringify(updateData)
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Cập nhật thất bại');
 
-                alert('Đã cập nhật giao dịch!');
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Cập nhật thất bại');
+                }
+
+                alert('Đã cập nhật giao dịch thành công!');
                 modal.remove();
 
                 // Reload calendar
-                lichData = null;
-                loadLichData(true).then(data => {
-                    if (data) {
-                        renderLichCalendar();
-                        renderLichTransactions();
-                        updateLichSummary();
-                    }
+                loadLichData(true).then(() => {
+                    renderLichCalendar();
+                    renderLichTransactions();
+                    updateLichSummary();
                 });
             } catch (err) {
                 alert('Lỗi: ' + err.message);
-                console.error('Update error:', err);
+                console.error('[MODAL] Save error:', err);
             }
         });
     }
+
+
 
     function formatDateKey(date) {
         const day = String(date.getDate()).padStart(2, '0');
@@ -1300,50 +1389,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     data: {
                         labels,
                         datasets: [
-                            {
-                                label: 'Thu',
-                                data: incomes,
-                                type: 'line',
-                                borderColor: '#4ade80',
-                                backgroundColor: 'rgba(74,222,128,0.18)',
-                                borderWidth: 3,
-                                tension: 0.25,
-                                fill: false,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#22c55e'
-                            },
-                            { label: 'Chi', data: expenses, backgroundColor: 'rgba(239,68,68,0.8)', borderRadius: 10, barThickness: 26, maxBarThickness: 32, stack: 'stack' },
-                            {
-                                label: 'Quỹ',
-                                data: funds,
-                                type: 'line',
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59,130,246,0.18)',
-                                borderWidth: 3,
-                                tension: 0.25,
-                                fill: false,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#3b82f6'
-                            },
+                            { label: 'Thu', data: incomes, type: 'line', borderColor: 'rgba(34,197,94,1)', backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 3, tension: 0.3, fill: false, pointRadius: 5, pointBackgroundColor: 'rgba(34,197,94,1)' },
+                            { label: 'Chi', data: expenses, type: 'line', borderColor: 'rgba(239,68,68,1)', backgroundColor: 'rgba(239,68,68,0.2)', borderWidth: 3, tension: 0.3, fill: false, pointRadius: 5, pointBackgroundColor: 'rgba(239,68,68,1)' },
+                            { label: 'Quỹ', data: funds, backgroundColor: 'rgba(59,130,246,0.9)', borderRadius: 4, barThickness: 14, maxBarThickness: 18 },
                         ]
                     },
                     options: {
                         responsive: true,
+                        indexAxis: 'y',
                         maintainAspectRatio: false,
                         scales: {
                             y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#e2e8f0',
-                                    callback: (v) => formatNumber(v)
-                                },
+                                ticks: { color: '#e2e8f0' },
                                 grid: { color: 'rgba(148,163,184,0.25)' },
                                 border: { color: 'rgba(148,163,184,0.35)' }
                             },
                             x: {
+                                beginAtZero: true,
                                 ticks: {
                                     color: '#e2e8f0',
-                                    callback: (_val, idx) => labels[idx] ?? _val
+                                    callback: (v) => formatNumber(v)
                                 },
                                 grid: { color: 'rgba(148,163,184,0.18)' },
                                 border: { color: 'rgba(148,163,184,0.35)' }
@@ -1406,69 +1471,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     if (wrapMonths) wrapMonths.innerHTML = '';
                 }
-                const labelsM = months.map(m => `T${m.month}`);
-                const incomesM = months.map(m => m.income || 0);
-                const expensesM = months.map(m => m.expense || 0);
-                const fundsM = months.map(m => m.fund || 0);
-                chartElMonths.parentElement.style.height = `${Math.max(260, labelsM.length * 55)}px`;
+                // Generate all 12 months
+                const labelsM = [];
+                const incomesM = [];
+                const expensesM = [];
+                const fundsM = [];
+                for (let i = 1; i <= 12; i++) {
+                    labelsM.push(`Tháng ${i}`);
+                    const monthData = months.find(m => m.month === i);
+                    incomesM.push(monthData ? monthData.income || 0 : 0);
+                    expensesM.push(monthData ? monthData.expense || 0 : 0);
+                    fundsM.push(monthData ? monthData.fund || 0 : 0);
+                }
+                chartElMonths.parentElement.style.height = `${Math.max(260, labelsM.length * 40)}px`;
                 if (reportMonthlyChart) reportMonthlyChart.destroy();
                 reportMonthlyChart = new Chart(chartElMonths, {
                     type: 'bar',
                     data: {
                         labels: labelsM,
                         datasets: [
-                            {
-                                label: 'Thu',
-                                data: incomesM,
-                                type: 'line',
-                                borderColor: '#4ade80',
-                                backgroundColor: 'rgba(74,222,128,0.18)',
-                                borderWidth: 3,
-                                tension: 0.25,
-                                fill: false,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#22c55e'
-                            },
-                            {
-                                label: 'Chi',
-                                data: expensesM,
-                                backgroundColor: 'rgba(239,68,68,0.8)',
-                                borderRadius: 10,
-                                barThickness: 26,
-                                maxBarThickness: 32,
-                                stack: 'stack'
-                            },
-                            {
-                                label: 'Quỹ',
-                                data: fundsM,
-                                type: 'line',
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59,130,246,0.18)',
-                                borderWidth: 3,
-                                tension: 0.25,
-                                fill: false,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#3b82f6'
-                            },
+                            { label: 'Thu', data: incomesM, type: 'line', borderColor: 'rgba(34,197,94,1)', backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 3, tension: 0.3, fill: false, pointRadius: 4, pointBackgroundColor: 'rgba(34,197,94,1)' },
+                            { label: 'Chi', data: expensesM, type: 'line', borderColor: 'rgba(239,68,68,1)', backgroundColor: 'rgba(239,68,68,0.2)', borderWidth: 3, tension: 0.3, fill: false, pointRadius: 4, pointBackgroundColor: 'rgba(239,68,68,1)' },
+                            { label: 'Quỹ', data: fundsM, backgroundColor: 'rgba(59,130,246,0.9)', borderRadius: 4, barThickness: 14, maxBarThickness: 18 },
                         ]
                     },
                     options: {
                         responsive: true,
+                        indexAxis: 'y',
                         maintainAspectRatio: false,
                         scales: {
                             y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#e2e8f0',
-                                    callback: (v) => formatNumber(v)
-                                },
+                                ticks: { color: '#e2e8f0', autoSkip: false },
                                 grid: { color: 'rgba(148,163,184,0.25)' },
                                 border: { color: 'rgba(148,163,184,0.35)' }
                             },
                             x: {
+                                beginAtZero: true,
                                 ticks: {
                                     color: '#e2e8f0',
-                                    callback: (_val, idx) => labelsM[idx] ?? _val
+                                    callback: (v) => formatNumber(v)
                                 },
                                 grid: { color: 'rgba(148,163,184,0.18)' },
                                 border: { color: 'rgba(148,163,184,0.35)' }
@@ -1521,67 +1562,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!days.length) return;
 
-            const labels = days.map(d => d.day);
-            const incomes = days.map(d => d.income || 0);
-            const expenses = days.map(d => d.expense || 0);
-            const funds = days.map(d => d.fund || 0);
+            // Get number of days in current month
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const labels = [];
+            const incomes = [];
+            const expenses = [];
+            const funds = [];
+            for (let i = 1; i <= daysInMonth; i++) {
+                labels.push(i);
+                const dayData = days.find(d => d.day === i);
+                incomes.push(dayData ? dayData.income || 0 : 0);
+                expenses.push(dayData ? dayData.expense || 0 : 0);
+                funds.push(dayData ? dayData.fund || 0 : 0);
+            }
 
-            chartEl.parentElement.style.height = '300px';
+            chartEl.parentElement.style.height = `${Math.max(300, daysInMonth * 25)}px`;
             if (reportDailyChart) reportDailyChart.destroy();
             reportDailyChart = new Chart(chartEl, {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: 'Thu',
-                            data: incomes,
-                            type: 'line',
-                            borderColor: '#4ade80',
-                            backgroundColor: 'rgba(74,222,128,0.18)',
-                            borderWidth: 2,
-                            tension: 0.25,
-                            fill: false,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#22c55e'
-                        },
-                        {
-                            label: 'Chi',
-                            data: expenses,
-                            backgroundColor: 'rgba(239,68,68,0.8)',
-                            borderRadius: 6,
-                            barThickness: 12,
-                            maxBarThickness: 16
-                        },
-                        {
-                            label: 'Quỹ',
-                            data: funds,
-                            type: 'line',
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59,130,246,0.18)',
-                            borderWidth: 2,
-                            tension: 0.25,
-                            fill: false,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#3b82f6'
-                        },
+                        { label: 'Thu', data: incomes, type: 'line', borderColor: 'rgba(34,197,94,1)', backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 2, tension: 0.3, fill: false, pointRadius: 3, pointBackgroundColor: 'rgba(34,197,94,1)' },
+                        { label: 'Chi', data: expenses, type: 'line', borderColor: 'rgba(239,68,68,1)', backgroundColor: 'rgba(239,68,68,0.2)', borderWidth: 2, tension: 0.3, fill: false, pointRadius: 3, pointBackgroundColor: 'rgba(239,68,68,1)' },
+                        { label: 'Quỹ', data: funds, backgroundColor: 'rgba(59,130,246,0.9)', borderRadius: 4, barThickness: 10, maxBarThickness: 14 },
                     ]
                 },
                 options: {
                     responsive: true,
+                    indexAxis: 'y',
                     maintainAspectRatio: false,
                     scales: {
                         y: {
+                            ticks: { color: '#e2e8f0', autoSkip: false },
+                            grid: { color: 'rgba(148,163,184,0.25)' },
+                            border: { color: 'rgba(148,163,184,0.35)' }
+                        },
+                        x: {
                             beginAtZero: true,
                             ticks: {
                                 color: '#e2e8f0',
                                 callback: (v) => formatNumber(v)
                             },
-                            grid: { color: 'rgba(148,163,184,0.25)' },
-                            border: { color: 'rgba(148,163,184,0.35)' }
-                        },
-                        x: {
-                            ticks: { color: '#e2e8f0' },
                             grid: { color: 'rgba(148,163,184,0.18)' },
                             border: { color: 'rgba(148,163,184,0.35)' }
                         }
@@ -2330,6 +2352,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+
 
 }); // End DOMContentLoaded
 
