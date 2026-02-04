@@ -1091,3 +1091,75 @@ body {
     background: #374151;
     border-color: #4b5563;
 }
+
+/* Monthly Balance Grid */
+.monthly-balance-section {
+    margin-bottom: 30px;
+}
+
+.monthly-balance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.month-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .month-cell {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-color: #4b5563;
+}
+
+.month-cell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #6366f1;
+}
+
+[data-theme="dark"] .month-cell:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.month-name {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95em;
+}
+
+[data-theme="dark"] .month-name {
+    color: #e5e7eb;
+}
+
+.month-balance {
+    font-weight: 700;
+    font-size: 1em;
+    color: #10b981;
+}
+
+.month-balance.negative {
+    color: #ef4444;
+}
+
+[data-theme="dark"] .month-balance {
+    color: #34d399;
+}
+
+[data-theme="dark"] .month-balance.negative {
+    color: #f87171;
+}
+
+@media (max-width: 600px) {
+    .monthly-balance-grid {
+        grid-template-columns: 1fr;
+    }
+}

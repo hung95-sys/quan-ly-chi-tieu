@@ -111,6 +111,40 @@
                     </div>
                 </div>
 
+                <!-- Monthly Balance Table -->
+                <div class="admin-section monthly-balance-section">
+                    <h2>
+                        <span class="section-icon">📅</span>
+                        Số dư theo tháng ({{ current_year if current_year else "2026" }})
+                    </h2>
+                    <div class="monthly-balance-grid" id="monthly-balance-grid">
+                        <div class="month-cell" data-month="1"><span class="month-name">Tháng 1</span><span
+                                class="month-balance" id="balance-month-1">0</span></div>
+                        <div class="month-cell" data-month="2"><span class="month-name">Tháng 2</span><span
+                                class="month-balance" id="balance-month-2">0</span></div>
+                        <div class="month-cell" data-month="3"><span class="month-name">Tháng 3</span><span
+                                class="month-balance" id="balance-month-3">0</span></div>
+                        <div class="month-cell" data-month="4"><span class="month-name">Tháng 4</span><span
+                                class="month-balance" id="balance-month-4">0</span></div>
+                        <div class="month-cell" data-month="5"><span class="month-name">Tháng 5</span><span
+                                class="month-balance" id="balance-month-5">0</span></div>
+                        <div class="month-cell" data-month="6"><span class="month-name">Tháng 6</span><span
+                                class="month-balance" id="balance-month-6">0</span></div>
+                        <div class="month-cell" data-month="7"><span class="month-name">Tháng 7</span><span
+                                class="month-balance" id="balance-month-7">0</span></div>
+                        <div class="month-cell" data-month="8"><span class="month-name">Tháng 8</span><span
+                                class="month-balance" id="balance-month-8">0</span></div>
+                        <div class="month-cell" data-month="9"><span class="month-name">Tháng 9</span><span
+                                class="month-balance" id="balance-month-9">0</span></div>
+                        <div class="month-cell" data-month="10"><span class="month-name">Tháng 10</span><span
+                                class="month-balance" id="balance-month-10">0</span></div>
+                        <div class="month-cell" data-month="11"><span class="month-name">Tháng 11</span><span
+                                class="month-balance" id="balance-month-11">0</span></div>
+                        <div class="month-cell" data-month="12"><span class="month-name">Tháng 12</span><span
+                                class="month-balance" id="balance-month-12">0</span></div>
+                    </div>
+                </div>
+
                 <!-- Funds Section -->
                 <div class="admin-section funds-section">
                     <h2>
@@ -260,8 +294,41 @@
             }
         }
 
+        async function loadMonthlyBalance() {
+            try {
+                const res = await fetch('/api/monthly_balance');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không tải được dữ liệu');
+
+                const months = data.months || [];
+                months.forEach(m => {
+                    const el = document.getElementById(`balance-month-${m.month}`);
+                    if (el) {
+                        // Nếu tháng không có giao dịch (income và expense đều = 0), để trống
+                        if (m.income === 0 && m.expense === 0) {
+                            el.textContent = '-';
+                            el.classList.remove('negative');
+                            el.style.color = '#9ca3af';
+                        } else {
+                            const balance = m.balance;
+                            el.textContent = (balance >= 0 ? '+' : '') + balance.toLocaleString('vi-VN');
+                            el.style.color = '';
+                            if (balance < 0) {
+                                el.classList.add('negative');
+                            } else {
+                                el.classList.remove('negative');
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Lỗi khi tải monthly balance:', error);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             loadFundSummary();
+            loadMonthlyBalance();
         });
     </script>
 </body>

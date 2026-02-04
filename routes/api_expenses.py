@@ -263,6 +263,53 @@ def get_daily_report():
         return jsonify({'error': str(e)}), 500
 
 
+@bp.route('/api/monthly_balance', methods=['GET'])
+@login_required
+def get_monthly_balance():
+    """API trả về số dư (balance = thu - chi) theo từng tháng trong năm"""
+    try:
+        user_id = session.get('user_id')
+        current_year = datetime.now().year
+        
+        sql = '''
+            SELECT strftime('%m', date) as month, type, amount
+            FROM transactions
+            WHERE user_id = ? AND strftime('%Y', date) = ?
+        '''
+        rows = query_db(sql, (user_id, str(current_year)))
+        
+        # Initialize balance data for all 12 months
+        monthly_balance = {m: {'income': 0, 'expense': 0} for m in range(1, 13)}
+        
+        for row in rows:
+            m = int(row['month'])
+            amount = row['amount']
+            if row['type'] == 'Thu':
+                monthly_balance[m]['income'] += amount
+            elif row['type'] == 'Chi':
+                monthly_balance[m]['expense'] += amount
+        
+        # Calculate balance for each month (NOT cumulative)
+        result = []
+        for m in range(1, 13):
+            month_income = monthly_balance[m]['income']
+            month_expense = monthly_balance[m]['expense']
+            month_balance = month_income - month_expense
+            result.append({
+                'month': m,
+                'income': month_income,
+                'expense': month_expense,
+                'balance': month_balance
+            })
+        
+        return jsonify({'year': current_year, 'months': result})
+        
+    except Exception as e:
+        print(f"Lỗi khi lấy số dư tháng: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @bp.route('/api/user_category_breakdown', methods=['GET'])
 @login_required
 def get_category_breakdown():

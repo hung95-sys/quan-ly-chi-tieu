@@ -132,7 +132,7 @@ def dashboard():
         import traceback
         traceback.print_exc()
     
-    return render_template('dashboard.html', current_user=current_user, summary=summary)
+    return render_template('dashboard.html', current_user=current_user, summary=summary, current_year=datetime.now().year)
 
 
 @bp.route('/chi-tieu')
