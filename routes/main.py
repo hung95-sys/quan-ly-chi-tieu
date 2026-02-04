@@ -112,7 +112,7 @@ def dashboard():
         # Sum all 'Thu' with fund_purpose (Income to fund)
         sql_fund_in = f'''
             SELECT SUM(amount) as total FROM transactions 
-            WHERE user_id IN ({placeholders}) AND type = 'Thu' AND fund_purpose IS NOT NULL AND fund_purpose != ''
+            WHERE user_id IN ({placeholders}) AND LOWER(type) = 'thu' AND fund_purpose IS NOT NULL AND fund_purpose != ''
         '''
         res_in = query_db(sql_fund_in, list(linked_ids), one=True)
         fund_in = res_in['total'] if res_in and res_in['total'] else 0
@@ -120,7 +120,7 @@ def dashboard():
         # Sum all 'Chi' with fund_purpose (Expense from fund)
         sql_fund_out = f'''
             SELECT SUM(amount) as total FROM transactions 
-            WHERE user_id IN ({placeholders}) AND type = 'Chi' AND fund_purpose IS NOT NULL AND fund_purpose != ''
+            WHERE user_id IN ({placeholders}) AND LOWER(type) = 'chi' AND fund_purpose IS NOT NULL AND fund_purpose != ''
         '''
         res_out = query_db(sql_fund_out, list(linked_ids), one=True)
         fund_out = res_out['total'] if res_out and res_out['total'] else 0

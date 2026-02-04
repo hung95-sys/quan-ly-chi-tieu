@@ -29,3 +29,6 @@ Thumbs.db
 
 # Project specific
 export_all.xlsx
+
+# Backups
+data/full_backup_*.xlsx

@@ -272,7 +272,7 @@ def get_monthly_balance():
         current_year = datetime.now().year
         
         sql = '''
-            SELECT strftime('%m', date) as month, type, amount
+            SELECT strftime('%m', date) as month, type, amount, fund_purpose
             FROM transactions
             WHERE user_id = ? AND strftime('%Y', date) = ?
         '''
@@ -284,10 +284,23 @@ def get_monthly_balance():
         for row in rows:
             m = int(row['month'])
             amount = row['amount']
-            if row['type'] == 'Thu':
-                monthly_balance[m]['income'] += amount
-            elif row['type'] == 'Chi':
-                monthly_balance[m]['expense'] += amount
+            is_fund = row['fund_purpose'] not in (None, '')
+            
+            # Chuẩn hóa type về chữ thường để so sánh
+            trans_type = row['type'].lower() if row['type'] else ''
+            
+            if trans_type == 'thu':
+                if is_fund:
+                    # Thu quỹ = Tiền từ ví vào quỹ -> Coi như chi tiêu (giảm số dư ví)
+                    monthly_balance[m]['expense'] += amount
+                else:
+                    # Thu thường -> Tăng số dư
+                    monthly_balance[m]['income'] += amount
+            elif trans_type == 'chi':
+                if not is_fund:
+                    # Chi thường -> Giảm số dư
+                    monthly_balance[m]['expense'] += amount
+                # Chi quỹ -> Tiền từ quỹ ra -> Không ảnh hưởng số dư ví cá nhân (bỏ qua)
         
         # Calculate balance for each month (NOT cumulative)
         result = []

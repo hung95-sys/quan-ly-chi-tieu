@@ -65,15 +65,15 @@ def get_fund_summary():
                 # Sum Thu
                 thu = query_db('''
                     SELECT SUM(amount) as total FROM transactions 
-                    WHERE user_id = ? AND type = 'Thu' AND fund_purpose = ?
-                ''', (uid, p_name), one=True)
+                    WHERE user_id = ? AND LOWER(type) = 'thu' AND (fund_purpose = ? OR fund_purpose LIKE ?)
+                ''', (uid, p_name, f'%{p_name}%'), one=True)
                 thu_amount = thu['total'] if thu and thu['total'] else 0
                 
                 # Sum Chi
                 chi = query_db('''
                     SELECT SUM(amount) as total FROM transactions 
-                    WHERE user_id = ? AND type = 'Chi' AND fund_purpose = ?
-                ''', (uid, p_name), one=True)
+                    WHERE user_id = ? AND LOWER(type) = 'chi' AND (fund_purpose = ? OR fund_purpose LIKE ?)
+                ''', (uid, p_name, f'%{p_name}%'), one=True)
                 chi_amount = chi['total'] if chi and chi['total'] else 0
                 
                 amount = thu_amount - chi_amount
